@@ -60,7 +60,7 @@ cd DoeCerto-Mobile
 
 ---
 
-#### 3. **Configurar o Frontend (Next.js + TypeScript)**
+#### 3. **Configurar o Frontend**
 
 ---
 
