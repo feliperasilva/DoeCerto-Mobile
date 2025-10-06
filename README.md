@@ -4,6 +4,8 @@
 
 ## 📌 Visão Geral
 
+A aplicação oferece um ambiente interativo e protegido, no qual organizações sociais podem divulgar suas necessidades e os usuários podem escolher o que, quando e como doar. Um dos principais pilares do projeto é **garantir a segurança das doações**, evitando golpes de caridade por meio da **validação de ONGs confiáveis**.
+
 ---
 
 ## ⚙️ Funcionalidades
@@ -26,8 +28,17 @@
   ## 🧰 Tecnologias Utilizadas
 
   ### **Frontend**
+- [Next.js](https://nextjs.org/) (React 19, com suporte a PWA)
+- [TypeScript](https://www.typescriptlang.org/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [ESLint](https://eslint.org/) + [eslint-config-next](https://nextjs.org/docs/pages/building-your-application/configuring/eslint)
+- [CSS Modules](https://nextjs.org/docs/pages/building-your-application/styling/css-modules)
 
   ### **Backend**
+- [Node.js](https://nodejs.org/)
+- [NestJS](https://nestjs.com/)
+- [Prisma ORM](https://www.prisma.io/)
+- [MySQL](https://www.mysql.com/)
 
   ### **Outros**
 
