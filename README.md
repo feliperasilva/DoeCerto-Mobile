@@ -28,7 +28,7 @@ A aplicação oferece um ambiente interativo e protegido, no qual organizações
   ## 🧰 Tecnologias Utilizadas
 
   ### **Frontend**
-- [Next.js](https://nextjs.org/) (React 19, com suporte a PWA)
+- [Next.js](https://nextjs.org/) (React, com suporte a PWA)
 - [TypeScript](https://www.typescriptlang.org/)
 - [TailwindCSS](https://tailwindcss.com/)
 - [ESLint](https://eslint.org/) + [eslint-config-next](https://nextjs.org/docs/pages/building-your-application/configuring/eslint)
