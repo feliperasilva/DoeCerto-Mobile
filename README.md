@@ -41,7 +41,9 @@ A aplicação oferece um ambiente interativo e protegido, no qual organizações
 - [MySQL](https://www.mysql.com/)
 
   ### **Outros**
-
+- HTML5, CSS3
+- Git & GitHub
+  
   ---
 
   ## 🚀 Guia de Clonagem e Execução do Projeto
