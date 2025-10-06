@@ -32,7 +32,6 @@ A aplicação oferece um ambiente interativo e protegido, no qual organizações
 - [TypeScript](https://www.typescriptlang.org/)
 - [TailwindCSS](https://tailwindcss.com/)
 - [ESLint](https://eslint.org/) + [eslint-config-next](https://nextjs.org/docs/pages/building-your-application/configuring/eslint)
-- [CSS Modules](https://nextjs.org/docs/pages/building-your-application/styling/css-modules)
 
   ### **Backend**
 - [Node.js](https://nodejs.org/)
