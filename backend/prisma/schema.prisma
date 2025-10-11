@@ -19,5 +19,5 @@ model Donor {
   name String @db.VarChar(100)
   email String @unique @db.VarChar(255)
   password String @db.VarChar(100)
-  cpf String @db.VarChar(14)
+  cpf String? @db.VarChar(14)
 }
