@@ -20,4 +20,6 @@ model Donor {
   email String @unique @db.VarChar(255)
   password String @db.VarChar(100)
   cpf String? @db.VarChar(14)
+
+  @@map("donors")
 }
