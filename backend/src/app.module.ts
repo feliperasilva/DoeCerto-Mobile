@@ -7,7 +7,7 @@ import { DonorModule } from './donor/donor.module';
 
 @Module({
   imports: [DonorModule],
-  controllers: [AppController, DonorController],
-  providers: [AppService, DonorService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
