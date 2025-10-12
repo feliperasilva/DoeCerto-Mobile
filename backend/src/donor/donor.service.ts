@@ -6,7 +6,11 @@ import { PrismaService } from 'src/database/prisma.service';
 export class DonorService {
     constructor(private prisma: PrismaService) {}
 
-    create(data: DonorDto) {
+    async create(data: DonorDto) {
+        const donor = await this.prisma.donor.create({
+            data
+        });
 
+        return donor;
     }
 }
