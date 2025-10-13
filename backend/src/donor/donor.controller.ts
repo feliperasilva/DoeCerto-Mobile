@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import type { DonorDto } from './dto/donor.dto';
 import { DonorService } from './donor.service';
 
@@ -15,4 +15,10 @@ export class DonorController {
     async findAll() {
         return this.donorService.findAll();
     }
+
+    @Put(":id")
+    async update(@Param("id") id: number, @Body() data: DonorDto) {
+        return this.donorService.update(Number(id), data);
+    }
+
 }
