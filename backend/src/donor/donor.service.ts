@@ -15,6 +15,6 @@ export class DonorService {
     }
 
     async findAll() {
-        return await this.prisma.donor.findMany
+        return await this.prisma.donor.findMany();
     }
 }
