@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import type { DonorDto } from './dto/donor.dto';
 import { DonorService } from './donor.service';
 
@@ -21,4 +21,8 @@ export class DonorController {
         return this.donorService.update(Number(id), data);
     }
 
+    @Delete(":id")
+    async delete(@Param("id") id: number) {
+        return this.donorService.delete(Number(id));
+    }
 }

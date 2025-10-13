@@ -29,7 +29,7 @@ export class DonorService {
             throw new Error('Doador não encontrado')
         }
 
-        await this.prisma.donor.update({
+        return await this.prisma.donor.update({
             data,
             where: {
                 id,
@@ -48,7 +48,7 @@ export class DonorService {
             throw new Error('Doador não encontrado')
         }
 
-        await this.prisma.donor.delete({
+        return await this.prisma.donor.delete({
             where: {
                 id,
             }
