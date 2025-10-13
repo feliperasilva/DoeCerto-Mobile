@@ -37,7 +37,7 @@ export class DonorService {
         });
     }
 
-    async delete(id: number, data: DonorDto) {
+    async delete(id: number) {
         const donorExists = await this.prisma.donor.findUnique({
             where: {
                 id,
