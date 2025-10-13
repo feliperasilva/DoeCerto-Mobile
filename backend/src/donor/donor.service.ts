@@ -54,4 +54,18 @@ export class DonorService {
             }
         });
     }
+
+    async getById(id: number) {
+        const donorExists = await this.prisma.donor.findUnique({
+            where: {
+                id,
+            }
+        });
+
+        if (!donorExists) {
+            throw new Error('Doador não encontrado')
+        }
+
+        return donorExists;
+    }
 }
