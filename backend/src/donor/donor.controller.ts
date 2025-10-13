@@ -25,4 +25,9 @@ export class DonorController {
     async delete(@Param("id") id: number) {
         return this.donorService.delete(Number(id));
     }
+
+    @Get(":id")
+    async getById(@Param("id") id: number) {
+        return this.donorService.getById(Number(id));
+    }
 }
