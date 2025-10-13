@@ -17,4 +17,23 @@ export class DonorService {
     async findAll() {
         return await this.prisma.donor.findMany();
     }
+
+    async update(id: number, data: DonorDto) {
+        const donorExists = await this.prisma.donor.findUnique({
+            where: {
+                id,
+            }
+        });
+
+        if (!donorExists) {
+            throw new Error('Doador não encontrado')
+        }
+
+        await this.prisma.donor.update({
+            data,
+            where: {
+                id,
+            }
+        });
+    }
 }
