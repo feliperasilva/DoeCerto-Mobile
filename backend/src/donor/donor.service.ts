@@ -36,4 +36,22 @@ export class DonorService {
             }
         });
     }
+
+    async delete(id: number, data: DonorDto) {
+        const donorExists = await this.prisma.donor.findUnique({
+            where: {
+                id,
+            }
+        });
+
+        if (!donorExists) {
+            throw new Error('Doador não encontrado')
+        }
+
+        await this.prisma.donor.delete({
+            where: {
+                id,
+            }
+        });
+    }
 }
