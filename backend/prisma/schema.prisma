@@ -23,3 +23,13 @@ model Donor {
 
   @@map("donors")
 }
+
+model Ong {
+  id Int @id() @default(autoincrement())
+  name String @db.VarChar(100)
+  email String @unique @db.VarChar(255)
+  password String @db.VarChar(100)
+  cnpj String @db.VarChar(18)
+
+  @@map("ongs")
+}
