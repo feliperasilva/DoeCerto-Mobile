@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -14,22 +8,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(100)
+  email      String    @unique @db.VarChar(255)
+  password   String    @db.VarChar(100)
+  role       Role
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relações com os subtipos
+  donor      Donor?
+  ong        Ong?
+  admin      Admin?
+
+  @@map("users")
+}
+
 model Donor {
-  id Int @id() @default(autoincrement())
-  name String @db.VarChar(100)
-  email String @unique @db.VarChar(255)
-  password String @db.VarChar(100)
-  cpf String? @db.VarChar(14)
+  id      Int    @id @default(autoincrement())
+  cpf     String @unique @db.VarChar(14)
+  userId  Int    @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("donors")
 }
 
 model Ong {
-  id Int @id() @default(autoincrement())
-  name String @db.VarChar(100)
-  email String @unique @db.VarChar(255)
-  password String @db.VarChar(100)
-  cnpj String @db.VarChar(18)
+  id          Int      @id @default(autoincrement())
+  cnpj        String   @unique @db.VarChar(18)
+  isVerified  Boolean  @default(false)
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ongs")
+}
+
+model Admin {
+  id      Int   @id @default(autoincrement())
+  userId  Int   @unique
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+enum Role {
+  donor
+  ong
+  admin
 }
