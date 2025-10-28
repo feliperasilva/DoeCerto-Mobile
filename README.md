@@ -1,104 +1,124 @@
 # DoeCerto-Mobile
 
----
+DoeCerto-Mobile é o repositório central do projeto DoeCerto, que irá reunir tanto o backend (API REST desenvolvida em NestJS, utilizando Prisma ORM e MySQL) quanto futuramente o frontend do aplicativo DoeCerto. O objetivo do projeto é facilitar o gerenciamento de doações e campanhas sociais, oferecendo soluções completas para aplicações mobile e web.
 
-## 📌 Visão Geral
+## Índice
 
-A aplicação oferece um ambiente interativo e protegido, no qual organizações sociais podem divulgar suas necessidades e os usuários podem escolher o que, quando e como doar. Um dos principais pilares do projeto é **garantir a segurança das doações**, evitando golpes de caridade por meio da **validação de ONGs confiáveis**.
-
----
-
-## ⚙️ Funcionalidades
-
-- 🔐 **Autenticação e Cadastro de Usuários**
-  - Suporte para ONGs, doadores e administradores
-- ✅ **Validação de ONGs**
-  - Somente instituições confiáveis têm acesso à plataforma
-- 🔑 **Recuperação de Senha**
-  - Permite redefinir o acesso com segurança
-- 🎁 **Sistema de Doações**
-  - Usuário pode selecionar o tipo de doação que deseja realizar
-- 👤 **Perfis Personalizados**
-  - ONGs e doadores criam sua identidade dentro da plataforma
-- 🧭 **Sistema de Filtragem**
-  - Liga as necessidades das ONGs com as intenções dos usuários
-
- ---
- 
-  ## 🧰 Tecnologias Utilizadas
-
-  ### **Frontend**
-- [Next.js](https://nextjs.org/) (React, com suporte a PWA)
-- [TypeScript](https://www.typescriptlang.org/)
-- [TailwindCSS](https://tailwindcss.com/)
-- [ESLint](https://eslint.org/) + [eslint-config-next](https://nextjs.org/docs/pages/building-your-application/configuring/eslint)
-
-  ### **Backend**
-- [Node.js](https://nodejs.org/)
-- [NestJS](https://nestjs.com/)
-- [Prisma ORM](https://www.prisma.io/)
-- [MySQL](https://www.mysql.com/)
-
-  ### **Outros**
-- HTML5, CSS3
-- Git & GitHub
-  
-  ---
-
-  ## 🚀 Guia de Clonagem e Execução do Projeto
-
-  ### ✔️ Requisitos
-
-  - **Backend**
-    
-  - **Frontend**
-
-  - **Outros**
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Pré-requisitos](#pré-requisitos)
+- [Instalação](#instalação)
+- [Execução do Backend](#execução-do-backend)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Documentação da API](#documentação-da-api)
+- [Contribuição](#contribuição)
+- [Licença](#licença)
 
 ---
 
-### 🔧 Passos para Rodar o Projeto
+## Sobre o Projeto
 
-#### 1. **Clonar o repositório**
+O DoeCerto-Mobile reúne diferentes componentes do projeto DoeCerto, incluindo o backend e, futuramente, o frontend. O backend é responsável por fornecer uma API robusta para o gerenciamento de doações, beneficiários, campanhas e usuários. O projeto foi desenvolvido com foco em escalabilidade, segurança e facilidade de manutenção.
+
+> **Nota:** Este README foca principalmente na configuração e execução do backend. Quando o frontend for adicionado, este documento será atualizado para incluir as instruções correspondentes.
+
+## Tecnologias Utilizadas
+
+- [NestJS](https://nestjs.com/) — Framework Node.js para construção de APIs escaláveis.
+- [Prisma ORM](https://www.prisma.io/) — ORM moderno para banco de dados.
+- [TypeScript](https://www.typescriptlang.org/) — Linguagem principal.
+- [MySQL](https://www.mysql.com/) — Banco de dados relacional.
+- [Docker](https://www.docker.com/) — Ambiente de desenvolvimento e execução do banco de dados.
+- **Futuramente:** Frameworks para o frontend do aplicativo.
+
+## Pré-requisitos
+
+- [Node.js](https://nodejs.org/) (recomendado v18+)
+- [npm](https://www.npmjs.com/) ou [yarn](https://yarnpkg.com/)
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/)
+- [Git](https://git-scm.com/)
+
+## Instalação
+
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/feliperasilva/DoeCerto-Mobile.git
+   cd DoeCerto-Mobile
+   ```
+
+2. **Instale as dependências do backend**
+   ```bash
+   npm install
+   # ou
+   yarn install
+   ```
+
+3. **Copie o arquivo de variáveis de ambiente**
+   ```bash
+   cp .env.example .env
+   ```
+   > Edite o arquivo `.env` conforme necessário para seu ambiente local.
+
+## Execução do Backend
+
+### 1. Subindo o banco de dados MySQL com Docker Compose
+
+O projeto possui um arquivo `docker-compose.yml` para facilitar a inicialização do banco de dados MySQL:
 
 ```bash
-git clone https://github.com/feliperasilva/DoeCerto-Mobile
-cd DoeCerto-Mobile
+docker-compose up -d
+```
+> Isso criará um container MySQL conforme especificado no arquivo `docker-compose.yml`.
+
+### 2. Rodando as migrações do Prisma
+
+Com o banco de dados em funcionamento, execute as migrações para criar as tabelas necessárias:
+
+```bash
+npx prisma migrate dev
 ```
 
----
+### 3. Inicializando o servidor NestJS
 
-#### 2. **Configurar o Backend**
+```bash
+npm run start:dev
+# ou
+yarn start:dev
+```
 
----
+A API estará disponível em `http://localhost:3000` (por padrão).
 
-#### 3. **Configurar o Frontend**
+## Estrutura do Projeto
 
----
+```
+DoeCerto-Mobile/
+├── src/
+│   ├── modules/      # Módulos do backend (usuários, campanhas, doações, etc)
+│   ├── prisma/       # Configuração do Prisma ORM
+│   └── main.ts       # Entry point da aplicação backend
+├── docker-compose.yml
+├── .env.example
+├── package.json
+├── README.md
+└── [frontend/]       # Pasta do frontend (em breve)
+```
 
-## 🧪 Testes
+## Documentação da API
 
-### Backend
+A documentação dos endpoints pode ser acessada via Swagger em `http://localhost:3000/api` após iniciar o projeto.
 
-### Frontend
+## Contribuição
 
----
-
-## 📝 Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nome-feature`)
-3. Commit suas alterações (`git commit -m 'feat: minha nova feature'`)
-4. Faça push para a branch (`git push origin feature/nome-feature`)
+1. Fork este repositório
+2. Crie uma branch com sua feature: `git checkout -b minha-feature`
+3. Commit suas alterações: `git commit -m 'Minha nova feature'`
+4. Push para o branch: `git push origin minha-feature`
 5. Abra um Pull Request
 
+## Licença
+
+Este projeto está sob a licença MIT.
+
 ---
 
-## 👨‍💻 Desenvolvedores
-
-- [Caio Vínicius](https://github.com/Vini1227)
-- [Felipe Romero](https://github.com/Feliperasilva)
-- [Guilherme Matheus](https://github.com/Guilhermemth)
-- [Kauã José](https://github.com/Kaua17742)
-- [Paulo Ricardo](https://github.com/Paulorc0)
-- [Ryon Xavier](https://github.com/Ryonxl)
+**Dúvidas ou sugestões?** Abra uma issue ou entre em contato!
