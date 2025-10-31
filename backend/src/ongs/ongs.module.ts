@@ -7,5 +7,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [OngsController],
   providers: [OngsService],
+  exports: [OngsService],
 })
 export class OngsModule {}
