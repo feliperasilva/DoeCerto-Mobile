@@ -23,8 +23,14 @@ export class AdminsService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const admin = await this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: { name, email, password: hashedPassword, role: 'admin' },
+    });
+
+    const admin = await this.prisma.admin.create({
+      data: {
+        userId: user.id,
+      },
     });
 
     return excludePassword(admin); // UserResponseDto seguro
