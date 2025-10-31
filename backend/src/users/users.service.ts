@@ -44,6 +44,14 @@ export class UsersService {
     return excludePassword(user) as UserResponseDto;
   }
 
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async findById(id: string) {
+    return this.prisma.user.findUnique({ where: { id: Number(id) } });
+  }
+
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
