@@ -66,7 +66,7 @@ O DoeCerto-Mobile reúne diferentes componentes do projeto DoeCerto, incluindo o
 O projeto possui um arquivo `docker-compose.yml` para facilitar a inicialização do banco de dados MySQL:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 > Isso criará um container MySQL conforme especificado no arquivo `docker-compose.yml`.
 
