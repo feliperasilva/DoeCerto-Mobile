@@ -51,13 +51,13 @@ export class AdminsService {
   // Aprovar ONG
   async approveOng(ongId: number) {
     const ong = await this.prisma.ong.findUnique({
-      where: { id: ongId },
+      where: { userId: ongId },
       include: { user: true }, // necessário para mapear nome/email
     });
     if (!ong) throw new NotFoundException('ONG not found');
 
     const updatedOng = await this.prisma.ong.update({
-      where: { id: ongId },
+      where: { userId: ongId },
       data: { isVerified: true },
       include: { user: true },
     });
@@ -68,13 +68,13 @@ export class AdminsService {
   // Reprovar ONG
   async rejectOng(ongId: number) {
     const ong = await this.prisma.ong.findUnique({
-      where: { id: ongId },
+      where: { userId: ongId },
       include: { user: true },
     });
     if (!ong) throw new NotFoundException('ONG not found');
 
     const updatedOng = await this.prisma.ong.update({
-      where: { id: ongId },
+      where: { userId: ongId },
       data: { isVerified: false },
       include: { user: true },
     });

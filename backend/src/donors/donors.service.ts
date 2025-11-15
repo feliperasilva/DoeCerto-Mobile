@@ -67,7 +67,7 @@ export class DonorsService {
 
   async findOne(id: number) {
     const donor = await this.prisma.donor.findUnique({
-      where: { id },
+      where: { userId: id },
       include: { user: true },
     });
     if (!donor) throw new NotFoundException(`Donor with id ${id} not found`);
@@ -79,7 +79,7 @@ export class DonorsService {
   }
 
   async update(id: number, updateDonorDto: UpdateDonorDto) {
-    const donor = await this.prisma.donor.findUnique({ where: { id } });
+    const donor = await this.prisma.donor.findUnique({ where: { userId: id } });
     if (!donor) throw new NotFoundException(`Donor with id ${id} not found`);
 
     if (updateDonorDto.cpf && updateDonorDto.cpf !== donor.cpf) {
@@ -89,12 +89,12 @@ export class DonorsService {
       if (existingCpf) throw new BadRequestException('CPF already in use');
     }
 
-    return this.prisma.donor.update({ where: { id }, data: updateDonorDto });
+    return this.prisma.donor.update({ where: { userId: id }, data: updateDonorDto });
   }
 
   async remove(id: number) {
-    const donor = await this.prisma.donor.findUnique({ where: { id } });
+    const donor = await this.prisma.donor.findUnique({ where: { userId: id } });
     if (!donor) throw new NotFoundException(`Donor with id ${id} not found`);
-    return this.prisma.donor.delete({ where: { id } });
+    return this.prisma.donor.delete({ where: { userId: id } });
   }
 }
