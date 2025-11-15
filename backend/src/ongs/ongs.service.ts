@@ -68,7 +68,7 @@ export class OngsService {
 
   async findOne(id: number) {
     const ong = await this.prisma.ong.findUnique({
-      where: { id },
+      where: { userId: id },
       include: { user: true },
     });
     if (!ong) throw new NotFoundException(`Ong with id ${id} not found`);
@@ -80,7 +80,7 @@ export class OngsService {
   }
 
   async update(id: number, updateOngDto: UpdateOngDto) {
-    const ong = await this.prisma.ong.findUnique({ where: { id } });
+    const ong = await this.prisma.ong.findUnique({ where: { userId: id } });
     if (!ong) throw new NotFoundException(`Ong with id ${id} not found`);
 
     if (updateOngDto.cnpj && updateOngDto.cnpj !== ong.cnpj) {
@@ -90,12 +90,12 @@ export class OngsService {
       if (existingCnpj) throw new BadRequestException('CNPJ already in use');
     }
 
-    return this.prisma.ong.update({ where: { id }, data: updateOngDto });
+    return this.prisma.ong.update({ where: { userId: id }, data: updateOngDto });
   }
 
   async remove(id: number) {
-    const ong = await this.prisma.ong.findUnique({ where: { id } });
+    const ong = await this.prisma.ong.findUnique({ where: { userId: id } });
     if (!ong) throw new NotFoundException(`Ong with id ${id} not found`);
-    return this.prisma.ong.delete({ where: { id } });
+    return this.prisma.ong.delete({ where: { userId: id } });
   }
 }

@@ -17,7 +17,6 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  // Relações com os subtipos
   donor      Donor?
   ong        Ong?
   admin      Admin?
@@ -26,27 +25,26 @@ model User {
 }
 
 model Donor {
-  id      Int    @id @default(autoincrement())
-  cpf     String @unique @db.VarChar(14)
-  userId  Int    @unique
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cpf       String @unique @db.VarChar(14)
+  userId    Int    @id @unique 
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  donations Donation[]
 
   @@map("donors")
 }
 
 model Ong {
-  id          Int      @id @default(autoincrement())
   cnpj        String   @unique @db.VarChar(18)
   isVerified  Boolean  @default(false)
-  userId      Int      @unique
+  userId      Int      @id @unique 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  donations   Donation[]
 
   @@map("ongs")
 }
 
 model Admin {
-  id      Int   @id @default(autoincrement())
-  userId  Int   @unique
+  userId  Int   @id @unique 
   user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admins")
@@ -56,4 +54,33 @@ enum Role {
   donor
   ong
   admin
+}
+
+model Donation {
+  id                  Int             @id @default(autoincrement())
+  donationType        DonationType
+  donationStatus      DonationStatus  @default(pending)
+  monetaryAmount      Float?
+  monetaryCurrency    String?         @db.VarChar(3)
+  materialDescription String?
+  materialQuantity    Int?
+  donorId             Int
+  ongId               Int
+  donor               Donor           @relation(fields: [donorId], references: [userId], onDelete: Cascade) // NOVO: Referência a 'userId'
+  ong                 Ong             @relation(fields: [ongId], references: [userId], onDelete: Cascade)   // NOVO: Referência a 'userId'
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@map("donations")
+}
+
+enum DonationStatus {
+  pending
+  completed
+  cancelled
+}
+
+enum DonationType {
+  monetary
+  material
 }
