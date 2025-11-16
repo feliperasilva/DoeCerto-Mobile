@@ -66,15 +66,15 @@ export class DonorsService {
   }
 
   async findOne(id: number) {
-    const donor = await this.prisma.donor.findUnique({
+    const donors = await this.prisma.donor.findUnique({
       where: { userId: id },
       include: { user: true },
     });
-    if (!donor) throw new NotFoundException(`Donor with id ${id} not found`);
+    if (!donors) throw new NotFoundException(`Donor with id ${id} not found`);
 
     return {
-      ...donor,
-      user: excludePassword(donor.user),
+      ...donors,
+      user: excludePassword(donors.user),
     };
   }
 
@@ -93,8 +93,8 @@ export class DonorsService {
   }
 
   async remove(id: number) {
-    const donor = await this.prisma.donor.findUnique({ where: { userId: id } });
-    if (!donor) throw new NotFoundException(`Donor with id ${id} not found`);
+    const donors = await this.prisma.donor.findUnique({ where: { userId: id } });
+    if (!donors) throw new NotFoundException(`Donor with id ${id} not found`);
     return this.prisma.donor.delete({ where: { userId: id } });
   }
 }

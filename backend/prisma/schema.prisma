@@ -25,19 +25,19 @@ model User {
 }
 
 model Donor {
-  cpf       String @unique @db.VarChar(14)
   userId    Int    @id @unique 
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cpf       String @unique @db.VarChar(14)
   donations Donation[]
 
   @@map("donors")
 }
 
 model Ong {
-  cnpj        String   @unique @db.VarChar(18)
-  isVerified  Boolean  @default(false)
   userId      Int      @id @unique 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cnpj        String   @unique @db.VarChar(18)
+  isVerified  Boolean  @default(false)
   donations   Donation[]
 
   @@map("ongs")
@@ -77,7 +77,7 @@ model Donation {
 enum DonationStatus {
   pending
   completed
-  cancelled
+  canceled
 }
 
 enum DonationType {
