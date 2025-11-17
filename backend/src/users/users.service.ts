@@ -1,47 +1,45 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { UserResponseDto } from './dto/user-response.dto';
 import { excludePassword } from 'src/common/utils/exclude-password.util';
-import * as bcrypt from 'bcrypt';
+import { ValidationUtil } from 'src/common/utils/validation.util';
 
 @Injectable()
 export class UsersService {
+  private readonly SALT_ROUNDS = 10;
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    const { email, password } = createUserDto;
+    const { email, password, ...rest } = createUserDto;
 
-    // Verifica email único
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
-    if (existingUser) throw new BadRequestException('Email already in use');
+    // Validate unique email
+    await ValidationUtil.validateUniqueEmail(this.prisma, email);
 
-    // Hash da senha
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS);
 
     const user = await this.prisma.user.create({
-      data: { ...createUserDto, password: hashedPassword },
+      data: { ...rest, email, password: hashedPassword },
     });
 
-    return excludePassword(user) as UserResponseDto;
+    return excludePassword(user);
   }
 
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.prisma.user.findMany();
-    return users.map((u) => excludePassword(u) as UserResponseDto);
+    return users.map((u) => excludePassword(u));
   }
 
   async findOne(id: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
-    return excludePassword(user) as UserResponseDto;
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return excludePassword(user);
   }
 
   async findByEmail(email: string) {
@@ -57,30 +55,43 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
 
+    // Validate email if being updated
     if (updateUserDto.email && updateUserDto.email !== user.email) {
-      const existingEmail = await this.prisma.user.findUnique({
-        where: { email: updateUserDto.email },
-      });
-      if (existingEmail && existingEmail.id !== id)
-        throw new BadRequestException('Email already in use');
+      await ValidationUtil.validateUniqueEmail(
+        this.prisma,
+        updateUserDto.email,
+        id,
+      );
     }
 
-    const data: any = { ...updateUserDto };
+    const updateData: Partial<UpdateUserDto> = { ...updateUserDto };
+
+    // Hash password if being updated
     if (updateUserDto.password) {
-      data.password = await bcrypt.hash(updateUserDto.password, 10);
+      updateData.password = await bcrypt.hash(
+        updateUserDto.password,
+        this.SALT_ROUNDS,
+      );
     }
 
-    const updatedUser = await this.prisma.user.update({ where: { id }, data });
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+    });
     return excludePassword(updatedUser) as UserResponseDto;
   }
 
   async remove(id: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
 
     const deletedUser = await this.prisma.user.delete({ where: { id } });
-    return excludePassword(deletedUser) as UserResponseDto;
+    return excludePassword(deletedUser);
   }
 }

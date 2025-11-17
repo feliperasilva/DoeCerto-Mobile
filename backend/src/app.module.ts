@@ -7,9 +7,18 @@ import { DonorsModule } from './donors/donors.module';
 import { OngsModule } from './ongs/ongs.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminsModule } from './admins/admins.module';
+import { DonationsModule } from './donations/donations.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, DonorsModule, OngsModule, AuthModule, AdminsModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    DonorsModule,
+    OngsModule,
+    AuthModule,
+    AdminsModule,
+    DonationsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
