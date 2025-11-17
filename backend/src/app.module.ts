@@ -10,7 +10,15 @@ import { AdminsModule } from './admins/admins.module';
 import { DonationsModule } from './donations/donations.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, DonorsModule, OngsModule, AuthModule, AdminsModule, DonationsModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    DonorsModule,
+    OngsModule,
+    AuthModule,
+    AdminsModule,
+    DonationsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
