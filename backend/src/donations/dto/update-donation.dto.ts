@@ -1,4 +1,11 @@
-import { IsOptional, IsEnum, IsString, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsPositive,
+  IsNumber,
+} from 'class-validator';
 
 export enum DonationStatus {
   PENDING = 'pending',
@@ -7,17 +14,17 @@ export enum DonationStatus {
 }
 
 export class UpdateDonationDto {
-
   @IsOptional()
   @IsEnum(DonationStatus)
-  status?: DonationStatus; 
+  donationStatus?: DonationStatus;
 
   @IsOptional()
   @IsString()
   materialDescription?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
   materialQuantity?: number;
-
 }
