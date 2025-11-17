@@ -20,13 +20,6 @@
   <a href="#-repositório-doecerto-frontend">Front-End</a>
 </p>
 
-<p align="center">
- Clique abaixo para acessar o repositório Frontend:
-</p>
-<p align="center">
-<a href="https://github.com/PauloRC0/DoeCerto-Frontend">DoeCerto-Frontend</a>
-</p>
-
 ---
 
 ## 📋 Sobre
