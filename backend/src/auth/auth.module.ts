@@ -15,7 +15,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ConfigModule,
     DonorsModule,
     OngsModule,
-    
+
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
     JwtModule.registerAsync({
@@ -24,14 +24,16 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (configService: ConfigService): JwtModuleOptions => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME') as any || '1h',
-          algorithm: (configService.get<string>('JWT_ALGORITHM') || 'HS256') as any,
+          expiresIn:
+            (configService.get<string>('JWT_EXPIRATION_TIME') as any) || '1h',
+          algorithm: (configService.get<string>('JWT_ALGORITHM') ||
+            'HS256') as any,
         },
       }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtModule], 
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

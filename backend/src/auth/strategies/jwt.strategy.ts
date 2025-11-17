@@ -15,10 +15,10 @@ const cookieExtractor = (req: Request): string | null => {
 };
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') { 
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
-    private readonly usersService: UsersService, 
-    private readonly configService: ConfigService, 
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {
     super({
       jwtFromRequest: cookieExtractor,
@@ -27,11 +27,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: { sub: string; email: string; role: string }): Promise<Omit<User, 'password'>> {
+  async validate(payload: {
+    sub: string;
+    email: string;
+    role: string;
+  }): Promise<Omit<User, 'password'>> {
     const user = await this.usersService.findById(payload.sub);
 
     if (!user) {
-      throw new UnauthorizedException('Token inválido ou usuário não encontrado.');
+      throw new UnauthorizedException(
+        'Token inválido ou usuário não encontrado.',
+      );
     }
 
     // Remove dados sensíveis (como a senha) do objeto
