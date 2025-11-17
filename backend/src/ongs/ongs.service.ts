@@ -1,63 +1,59 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRole } from '../users/dto/create-user.dto';
 import { CreateOngDto } from './dto/create-ong.dto';
 import { UpdateOngDto } from './dto/update-ong.dto';
 import { excludePassword } from 'src/common/utils/exclude-password.util';
+import { ValidationUtil } from 'src/common/utils/validation.util';
 
 @Injectable()
 export class OngsService {
+  private readonly SALT_ROUNDS = 10;
+  private readonly ongInclude = { user: true } as const;
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createOngDto: CreateOngDto) {
     const { name, email, password, cnpj } = createOngDto;
 
-    // Verifica se o CNPJ já existe
-    const existingCnpj = await this.prisma.ong.findUnique({ where: { cnpj } });
-    if (existingCnpj) throw new BadRequestException('CNPJ already in use');
+    // Validate unique constraints
+    await ValidationUtil.validateUniqueCnpj(this.prisma, cnpj);
+    await ValidationUtil.validateUniqueEmail(this.prisma, email);
 
-    // Verifica se o email já existe
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
-    if (existingUser) throw new BadRequestException('Email already in use');
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS);
 
-    // Hash da senha
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create user and ONG in a transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: UserRole.ONG,
+        },
+      });
 
-    // Cria o usuário
-    const user = await this.prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: UserRole.ONG,
-      },
-    });
+      const ong = await tx.ong.create({
+        data: {
+          cnpj,
+          userId: user.id,
+        },
+      });
 
-    // Cria a ONG associada ao usuário
-    const ong = await this.prisma.ong.create({
-      data: {
-        cnpj,
-        userId: user.id,
-      },
+      return { user, ong };
     });
 
-    // Retorna dados sem a senha
     return {
-      user: excludePassword(user),
-      ong,
+      user: excludePassword(result.user),
+      ong: result.ong,
     };
   }
 
   async findAll() {
     const ongs = await this.prisma.ong.findMany({
-      include: { user: true },
+      include: this.ongInclude,
     });
 
     return ongs.map((ong) => ({
@@ -69,9 +65,12 @@ export class OngsService {
   async findOne(id: number) {
     const ong = await this.prisma.ong.findUnique({
       where: { userId: id },
-      include: { user: true },
+      include: this.ongInclude,
     });
-    if (!ong) throw new NotFoundException(`Ong with id ${id} not found`);
+
+    if (!ong) {
+      throw new NotFoundException(`ONG with id ${id} not found`);
+    }
 
     return {
       ...ong,
@@ -81,21 +80,31 @@ export class OngsService {
 
   async update(id: number, updateOngDto: UpdateOngDto) {
     const ong = await this.prisma.ong.findUnique({ where: { userId: id } });
-    if (!ong) throw new NotFoundException(`Ong with id ${id} not found`);
-
-    if (updateOngDto.cnpj && updateOngDto.cnpj !== ong.cnpj) {
-      const existingCnpj = await this.prisma.ong.findUnique({
-        where: { cnpj: updateOngDto.cnpj },
-      });
-      if (existingCnpj) throw new BadRequestException('CNPJ already in use');
+    if (!ong) {
+      throw new NotFoundException(`ONG with id ${id} not found`);
     }
 
-    return this.prisma.ong.update({ where: { userId: id }, data: updateOngDto });
+    // Validate CNPJ if being updated
+    if (updateOngDto.cnpj && updateOngDto.cnpj !== ong.cnpj) {
+      await ValidationUtil.validateUniqueCnpj(
+        this.prisma,
+        updateOngDto.cnpj,
+        id,
+      );
+    }
+
+    return this.prisma.ong.update({
+      where: { userId: id },
+      data: updateOngDto,
+    });
   }
 
   async remove(id: number) {
     const ong = await this.prisma.ong.findUnique({ where: { userId: id } });
-    if (!ong) throw new NotFoundException(`Ong with id ${id} not found`);
+    if (!ong) {
+      throw new NotFoundException(`ONG with id ${id} not found`);
+    }
+
     return this.prisma.ong.delete({ where: { userId: id } });
   }
 }
