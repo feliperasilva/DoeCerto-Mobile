@@ -40,7 +40,23 @@ model Ong {
   isVerified  Boolean  @default(false)
   donations   Donation[]
 
+  profile    OngProfile?
+
   @@map("ongs")
+}
+
+model OngProfile {
+  id            Int      @id @default(autoincrement())
+  bio           String?  @db.VarChar(500)
+  avatarUrl     String?  @db.VarChar(255) // Caminho da imagem salva
+  contactNumber String?  @db.VarChar(20)
+  websiteUrl    String?  @db.VarChar(255)
+  address       String?  @db.VarChar(255)
+
+  ongId         Int      @unique
+  ong    Ong    @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+
+  @@map("ong_profiles")
 }
 
 model Admin {
