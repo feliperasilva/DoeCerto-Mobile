@@ -1,14 +1,33 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Delete,
+  ParseIntPipe,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { WhishlistItemService } from './whishlist-item.service';
 import { CreateWhishlistDto } from './dto/create-whishlist.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import type { User } from 'generated/prisma';
 
 @Controller('wishlist-items')
 export class WishlistItemController {
   constructor(private readonly service: WhishlistItemService) {}
 
   @Post()
-  create(@Body() dto: CreateWhishlistDto) {
-    return this.service.create(dto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ong')
+  create(@Body() dto: CreateWhishlistDto, @CurrentUser() user: User) {
+    const { description, quantity } = dto;
+    return this.service.create({ ongId: user.id, description, quantity });
   }
 
   @Get('ong/:ongId')
@@ -22,12 +41,28 @@ export class WishlistItemController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateWhishlistDto>) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ong')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: Partial<CreateWhishlistDto>,
+    @CurrentUser() user: User,
+  ) {
+    const item = await this.service.findOne(id);
+    if (item.ongId !== user.id) {
+      throw new ForbiddenException('You can only update your own wishlist items');
+    }
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ong')
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    const item = await this.service.findOne(id);
+    if (item.ongId !== user.id) {
+      throw new ForbiddenException('You can only remove your own wishlist items');
+    }
     return this.service.remove(id);
   }
 }
