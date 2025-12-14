@@ -41,6 +41,7 @@ model Ong {
   donations   Donation[]
 
   profile    OngProfile?
+  wishlistItems WishlistItem[]
 
   @@map("ongs")
 }
@@ -99,4 +100,15 @@ enum DonationStatus {
 enum DonationType {
   monetary
   material
+}
+
+//Model for WishlistItem
+model WishlistItem {
+  id          Int     @id @default(autoincrement())
+  ongId      Int
+  description String  @db.VarChar(255)
+  quantity    Int
+  ong        Ong     @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+
+  @@map("wishlist_items")
 }

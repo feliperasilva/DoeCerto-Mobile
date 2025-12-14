@@ -8,6 +8,7 @@ import { OngsModule } from './ongs/ongs.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminsModule } from './admins/admins.module';
 import { DonationsModule } from './donations/donations.module';
+import { WhishlistItemModule } from './whishlist_items/whishlist-item.module';
 import { OngProfilesModule } from './ong-profile/ong-profiles.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { OngProfilesModule } from './ong-profile/ong-profiles.module';
     AuthModule,
     AdminsModule,
     DonationsModule, 
+    WhishlistItemModule,
     OngProfilesModule,
   ],
   controllers: [AppController],
