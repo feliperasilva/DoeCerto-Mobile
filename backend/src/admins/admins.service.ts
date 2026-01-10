@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { excludePassword } from 'src/common/utils/exclude-password.util';
 import { CreateAdminDto } from './dto/create-admin.dto';
+import { VerificationStatus } from './dto/verification-status.dto';
 
 @Injectable()
 export class AdminsService {
@@ -37,7 +38,7 @@ export class AdminsService {
   }
 
   // Deletar admin
-  async deleteAdmin(adminId: number) {
+  async deleteAdmin(adminId: number, ) {
     const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
     if (!admin || admin.role !== 'admin')
       throw new NotFoundException('Admin not found');
@@ -58,7 +59,7 @@ export class AdminsService {
 
     const updatedOng = await this.prisma.ong.update({
       where: { userId: ongId },
-      data: { isVerified: true },
+      data: { isVerified: VerificationStatus.VERIFIED },
       include: { user: true },
     });
 
@@ -75,10 +76,37 @@ export class AdminsService {
 
     const updatedOng = await this.prisma.ong.update({
       where: { userId: ongId },
-      data: { isVerified: false },
+      data: { isVerified: VerificationStatus.REJECTED },
       include: { user: true },
     });
 
     return updatedOng;
   }
+
+  async pendentOngs() {
+    const ongs = await this.prisma.ong.findMany({
+      where: { isVerified: VerificationStatus.PENDING },
+      include: { user: true },
+    });
+
+    return ongs;
+    }
+
+  async verifiedOngs() {
+    const ongs = await this.prisma.ong.findMany({
+      where: { isVerified: VerificationStatus.VERIFIED },
+      include: { user: true },
+    });
+
+    return ongs;
+    }
+
+  async rejectedOngs() {
+    const ongs = await this.prisma.ong.findMany({
+      where: { isVerified: VerificationStatus.REJECTED },
+      include: { user: true },
+    });
+
+    return ongs;
+    } 
 }

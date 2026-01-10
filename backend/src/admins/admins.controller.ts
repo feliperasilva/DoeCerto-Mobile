@@ -32,4 +32,6 @@ export class AdminsController {
     const ong = await this.adminsService.rejectOng(Number(id));
     return mapOng(ong);
   }
+
+  
 }

@@ -33,11 +33,17 @@ model Donor {
   @@map("donors")
 }
 
+enum VerificationStatus {
+  pending
+  verified
+  rejected
+}
+
 model Ong {
   userId      Int      @id @unique 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   cnpj        String   @unique @db.VarChar(18)
-  isVerified  Boolean  @default(false)
+  isVerified  VerificationStatus @default(pending)
   donations   Donation[]
 
   @@map("ongs")
