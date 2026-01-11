@@ -114,20 +114,20 @@ export class DonationsService {
     this.verifyUserAuthorization(donation, requesterId);
 
     const updateData: Prisma.DonationUpdateInput = {};
-    const isCancelling = donationStatus === DonationStatus.CANCELED;
+    const isCancelling = donationStatus === DonationStatus.canceled;
 
     // Handle cancellation
     if (isCancelling) {
       this.validateCancellation(donation.donationStatus);
-      updateData.donationStatus = DonationStatus.CANCELED;
-    } else if (donation.donationType === DonationType.MONETARY) {
+      updateData.donationStatus = DonationStatus.canceled;
+    } else if (donation.donationType === DonationType.monetary) {
       throw new BadRequestException('Monetary donations can only be canceled');
     }
 
     const isDonor = donation.donorId === requesterId;
 
     // Handle donor updates
-    if (isDonor && donation.donationType === DonationType.MATERIAL) {
+    if (isDonor && donation.donationType === DonationType.material) {
       this.handleDonorUpdate(
         donation,
         updateData,
@@ -162,7 +162,7 @@ export class DonationsService {
 
   async remove(id: number, requesterId: number) {
     const cancelDto: UpdateDonationDto = {
-      donationStatus: DonationStatus.CANCELED,
+      donationStatus: DonationStatus.canceled,
     };
     return this.update(id, cancelDto, requesterId);
   }
@@ -174,7 +174,7 @@ export class DonationsService {
       throw new NotFoundException(`ONG with id ${ongId} not found`);
     }
 
-    if (!ong.isVerified) {
+    if (ong.verificationStatus !== 'verified') {
       throw new BadRequestException(
         'Cannot donate to an unverified ONG. Please choose a verified organization.',
       );
@@ -196,7 +196,7 @@ export class DonationsService {
   }
 
   private validateCancellation(currentStatus: string): void {
-    if (currentStatus !== DonationStatus.PENDING) {
+    if (currentStatus !== DonationStatus.pending) {
       throw new BadRequestException('Only pending donations can be canceled');
     }
   }
@@ -208,7 +208,7 @@ export class DonationsService {
     materialQuantity?: number,
     donationStatus?: DonationStatus,
   ): void {
-    if (donation.donationStatus !== DonationStatus.PENDING) {
+    if (donation.donationStatus !== DonationStatus.pending) {
       throw new BadRequestException('Only pending donations can be updated');
     }
 
@@ -220,7 +220,7 @@ export class DonationsService {
       updateData.materialQuantity = materialQuantity;
     }
 
-    if (donationStatus === DonationStatus.COMPLETED) {
+    if (donationStatus === DonationStatus.completed) {
       throw new BadRequestException(
         'Donors cannot mark donations as completed',
       );
@@ -250,15 +250,15 @@ export class DonationsService {
     currentStatus: string,
     newStatus: DonationStatus,
   ): void {
-    if (newStatus === DonationStatus.PENDING) {
+    if (newStatus === DonationStatus.pending) {
       throw new BadRequestException(
         'Donation status can only be updated to CANCELED or COMPLETED',
       );
     }
 
     if (
-      currentStatus === DonationStatus.CANCELED ||
-      currentStatus === DonationStatus.COMPLETED
+      currentStatus === DonationStatus.canceled ||
+      currentStatus === DonationStatus.completed
     ) {
       throw new BadRequestException(
         `Status cannot be changed for donations that are already ${currentStatus}`,

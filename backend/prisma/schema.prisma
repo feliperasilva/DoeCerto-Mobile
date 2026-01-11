@@ -9,37 +9,50 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String    @db.VarChar(100)
-  email      String    @unique @db.VarChar(255)
-  password   String    @db.VarChar(100)
-  role       Role
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  donor      Donor?
-  ong        Ong?
-  admin      Admin?
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(100)
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  donor     Donor?
+  ong       Ong?
+  admin     Admin?
 
   @@map("users")
 }
 
 model Donor {
-  userId    Int    @id @unique 
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cpf       String @unique @db.VarChar(14)
+  userId    Int        @id @unique 
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cpf       String     @unique @db.VarChar(14)
   donations Donation[]
 
   @@map("donors")
 }
 
-model Ong {
-  userId      Int      @id @unique 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cnpj        String   @unique @db.VarChar(18)
-  isVerified  Boolean  @default(false)
-  donations   Donation[]
+enum VerificationStatus {
+  pending
+  verified
+  rejected
+}
 
+model Ong {
+  userId             Int                @id @unique 
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cnpj               String             @unique @db.VarChar(18)
+  verificationStatus VerificationStatus @default(pending)
+  verifiedAt         DateTime?
+  verifiedById       Int?
+  rejectionReason    String?            @db.Text
+  
+  // Relações
+  donations          Donation[]
+  verifiedBy         Admin?             @relation("OngVerifications", fields: [verifiedById], references: [userId], onDelete: SetNull)
+
+  @@index([verificationStatus])
   profile    OngProfile?
   wishlistItems WishlistItem[]
 
@@ -61,8 +74,11 @@ model OngProfile {
 }
 
 model Admin {
-  userId  Int   @id @unique 
-  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                 Int   @id @unique 
+  user                   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relação inversa: ONGs verificadas por este admin
+  verificationsPerformed Ong[] @relation("OngVerifications")
 
   @@map("admins")
 }
@@ -74,20 +90,24 @@ enum Role {
 }
 
 model Donation {
-  id                  Int             @id @default(autoincrement())
+  id                  Int            @id @default(autoincrement())
   donationType        DonationType
-  donationStatus      DonationStatus  @default(pending)
+  donationStatus      DonationStatus @default(pending)
   monetaryAmount      Float?
-  monetaryCurrency    String?         @db.VarChar(3)
-  materialDescription String?
+  monetaryCurrency    String?        @db.VarChar(3)
+  materialDescription String?        @db.Text
   materialQuantity    Int?
   donorId             Int
   ongId               Int
-  donor               Donor           @relation(fields: [donorId], references: [userId], onDelete: Cascade) // NOVO: Referência a 'userId'
-  ong                 Ong             @relation(fields: [ongId], references: [userId], onDelete: Cascade)   // NOVO: Referência a 'userId'
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  donor               Donor          @relation(fields: [donorId], references: [userId], onDelete: Cascade)
+  ong                 Ong            @relation(fields: [ongId], references: [userId], onDelete: Cascade)
 
+  @@index([donorId])
+  @@index([ongId])
+  @@index([donationStatus])
   @@map("donations")
 }
 

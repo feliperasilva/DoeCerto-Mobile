@@ -31,7 +31,7 @@ export class OngsService {
           name,
           email,
           password: hashedPassword,
-          role: UserRole.ONG,
+          role: UserRole.ong,
         },
       });
 

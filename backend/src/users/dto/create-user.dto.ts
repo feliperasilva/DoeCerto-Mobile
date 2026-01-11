@@ -1,10 +1,7 @@
 import { IsEmail, IsNotEmpty, Length, IsEnum } from 'class-validator';
+import { Role } from 'generated/prisma';
 
-export enum UserRole {
-  DONOR = 'donor',
-  ONG = 'ong',
-  ADMIN = 'admin',
-}
+export { Role as UserRole };
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Name is required' })
@@ -18,6 +15,6 @@ export class CreateUserDto {
   @Length(6, 100, { message: 'Password must be at least 6 characters' })
   password: string;
 
-  @IsEnum(UserRole, { message: 'Role must be donor, ong, or admin' })
-  role: UserRole;
+  @IsEnum(Role, { message: 'Role must be donor, ong, or admin' })
+  role: Role;
 }

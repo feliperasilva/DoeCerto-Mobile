@@ -1,35 +1,92 @@
-import { Controller, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AdminsService } from './admins.service';
-import { UserResponseDto } from 'src/users/dto/user-response.dto';
 import { CreateAdminDto } from './dto/create-admin.dto';
-import { OngResponseDto } from 'src/ongs/dto/ong-response.dto';
-import { mapOng } from 'src/common/utils/map-ong.util';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import type { User } from 'generated/prisma';
 
 @Controller('admins')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin') // Todas as rotas são protegidas e só admins podem acessar
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 
+  // Criar novo admin (só admin pode criar outros admins)
   @Post()
-  async createAdmin(
-    @Body() createAdminDto: CreateAdminDto,
-  ): Promise<UserResponseDto> {
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() createAdminDto: CreateAdminDto) {
     return this.adminsService.createAdmin(createAdminDto);
   }
 
-  @Delete(':id')
-  async deleteAdmin(@Param('id') id: string): Promise<UserResponseDto> {
-    return this.adminsService.deleteAdmin(Number(id));
+  // Deletar admin
+  @Delete(':adminId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('adminId', ParseIntPipe) adminId: number) {
+    return this.adminsService.deleteAdmin(adminId);
   }
 
-  @Post('approve-ong/:id')
-  async approveOng(@Param('id') id: string): Promise<OngResponseDto> {
-    const ong = await this.adminsService.approveOng(Number(id));
-    return mapOng(ong); // mapOng precisa acessar ong.user
+  // Listar ONGs pendentes de verificação
+  @Get('ongs/pending')
+  getPendingOngs() {
+    return this.adminsService.pendentOngs();
   }
 
-  @Post('reject-ong/:id')
-  async rejectOng(@Param('id') id: string): Promise<OngResponseDto> {
-    const ong = await this.adminsService.rejectOng(Number(id));
-    return mapOng(ong);
+  // Listar ONGs verificadas/aprovadas
+  @Get('ongs/verified')
+  getVerifiedOngs() {
+    return this.adminsService.verifiedOngs();
+  }
+
+  // Listar ONGs rejeitadas
+  @Get('ongs/rejected')
+  getRejectedOngs() {
+    return this.adminsService.rejectedOngs();
+  }
+
+  // Aprovar ONG
+  @Patch('ongs/:ongId/approve')
+  @HttpCode(HttpStatus.OK)
+  approveOng(
+    @Param('ongId', ParseIntPipe) ongId: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.adminsService.approveOng(ongId, user.id);
+  }
+
+  // Reprovar ONG
+  @Patch('ongs/:ongId/reject')
+  @HttpCode(HttpStatus.OK)
+  rejectOng(
+    @Param('ongId', ParseIntPipe) ongId: number,
+    @Body('reason') reason: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.adminsService.rejectOng(ongId, user.id, reason);
+  }
+
+  // Ver estatísticas do próprio admin
+  @Get('stats/me')
+  getMyStats(@CurrentUser() user: User) {
+    return this.adminsService.getAdminStats(user.id);
+  }
+
+  // Ver estatísticas de outro admin (admin pode ver de qualquer admin)
+  @Get('stats/:adminId')
+  getAdminStats(@Param('adminId', ParseIntPipe) adminId: number) {
+    return this.adminsService.getAdminStats(adminId);
   }
 }

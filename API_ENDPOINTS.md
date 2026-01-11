@@ -33,11 +33,48 @@ Documentação completa de todos os endpoints com autenticação e autorização
 - **Descrição**: Logout do usuário
 - **Response**: Limpa cookie e retorna mensagem
 
-### GET `/auth/donor-panel` 👤
-- **Descrição**: Painel exclusivo para doadores
-- **Response**: Mensagem de boas-vindas
-
 ---
+
+## 👑 Admins (`/admins`)
+
+> Todas as rotas abaixo exigem autenticação (`JwtAuthGuard`) e role `admin` (`RolesGuard`).
+
+### POST `/admins` 👑
+- **Descrição**: Criar novo administrador
+- **Body**: `{ name: string, email: string, password: string }`
+- **Response**: Admin criado
+
+### DELETE `/admins/:adminId` 👑
+- **Descrição**: Deletar administrador
+- **Params**: `adminId: number`
+- **Response**: `204 No Content`
+
+### GET `/admins/ongs/pending` 👑
+- **Descrição**: Listar ONGs pendentes de verificação
+
+### GET `/admins/ongs/verified` 👑
+- **Descrição**: Listar ONGs já verificadas/aprovadas
+
+### GET `/admins/ongs/rejected` 👑
+- **Descrição**: Listar ONGs rejeitadas
+
+### PATCH `/admins/ongs/:ongId/approve` 👑
+- **Descrição**: Aprovar e marcar ONG como verificada
+- **Params**: `ongId: number`
+- **Response**: ONG atualizada como `VERIFIED`
+
+### PATCH `/admins/ongs/:ongId/reject` 👑
+- **Descrição**: Rejeitar ONG com justificativa
+- **Params**: `ongId: number`
+- **Body**: `{ reason: string }`
+- **Response**: ONG atualizada como `REJECTED`
+
+### GET `/admins/stats/me` 👑
+- **Descrição**: Estatísticas do admin logado (aprovações/rejeições realizadas)
+
+### GET `/admins/stats/:adminId` 👑
+- **Descrição**: Estatísticas de um admin específico
+- **Params**: `adminId: number`
 
 ## 👥 Users (`/users`)
 
@@ -314,4 +351,4 @@ curl -X PATCH http://localhost:3000/donors/1 \
 
 ---
 
-Última atualização: 16 de novembro de 2025
+Última atualização: 10 de janeiro de 2026
