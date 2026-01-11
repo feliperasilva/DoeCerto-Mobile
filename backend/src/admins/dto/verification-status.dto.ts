@@ -1,5 +1,3 @@
-export enum VerificationStatus {
-    PENDING = "pending",
-    VERIFIED = "verified",
-    REJECTED = "rejected",
-}
+import { VerificationStatus } from 'generated/prisma';
+
+export { VerificationStatus };

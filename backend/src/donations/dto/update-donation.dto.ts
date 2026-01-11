@@ -6,12 +6,9 @@ import {
   IsPositive,
   IsNumber,
 } from 'class-validator';
+import { DonationStatus } from 'generated/prisma';
 
-export enum DonationStatus {
-  PENDING = 'pending',
-  CANCELED = 'canceled',
-  COMPLETED = 'completed',
-}
+export { DonationStatus };
 
 export class UpdateDonationDto {
   @IsOptional()

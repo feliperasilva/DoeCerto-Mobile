@@ -8,11 +8,9 @@ import {
   IsString,
   Length,
 } from 'class-validator';
+import { DonationType } from 'generated/prisma';
 
-export enum DonationType {
-  MONETARY = 'monetary',
-  MATERIAL = 'material',
-}
+export { DonationType };
 
 export class CreateDonationDto {
   @IsNotEmpty({ message: 'ONG ID is required' })
@@ -29,14 +27,14 @@ export class CreateDonationDto {
 
   // Campos para doações monetárias
 
-  @ValidateIf((o) => o.donationType === DonationType.MONETARY)
+  @ValidateIf((o) => o.donationType === DonationType.monetary)
   @IsNotEmpty({ message: 'Monetary amount is required for monetary donations' })
   @IsNumber({}, { message: 'Monetary amount must be a valid number' })
   @IsPositive({ message: 'Monetary amount must be a positive number' })
   @Type(() => Number)
   monetaryAmount?: number;
 
-  @ValidateIf((o) => o.donationType === DonationType.MONETARY)
+  @ValidateIf((o) => o.donationType === DonationType.monetary)
   @IsNotEmpty({
     message: 'Monetary currency is required for monetary donations',
   })
@@ -48,14 +46,14 @@ export class CreateDonationDto {
 
   // Campos para doações materiais
 
-  @ValidateIf((o) => o.donationType === DonationType.MATERIAL)
+  @ValidateIf((o) => o.donationType === DonationType.material)
   @IsNotEmpty({
     message: 'Material description is required for material donations',
   })
   @IsString({ message: 'Material description must be a string' })
   materialDescription?: string;
 
-  @ValidateIf((o) => o.donationType === DonationType.MATERIAL)
+  @ValidateIf((o) => o.donationType === DonationType.material)
   @IsNotEmpty({
     message: 'Material quantity is required for material donations',
   })

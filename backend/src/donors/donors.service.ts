@@ -31,7 +31,7 @@ export class DonorsService {
           name,
           email,
           password: hashedPassword,
-          role: UserRole.DONOR,
+          role: UserRole.donor,
         },
       });
 
