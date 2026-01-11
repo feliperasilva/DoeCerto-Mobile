@@ -53,7 +53,24 @@ model Ong {
   verifiedBy         Admin?             @relation("OngVerifications", fields: [verifiedById], references: [userId], onDelete: SetNull)
 
   @@index([verificationStatus])
+  profile    OngProfile?
+  wishlistItems WishlistItem[]
+
   @@map("ongs")
+}
+
+model OngProfile {
+  id            Int      @id @default(autoincrement())
+  bio           String?  @db.VarChar(500)
+  avatarUrl     String?  @db.VarChar(255) // Caminho da imagem salva
+  contactNumber String?  @db.VarChar(20)
+  websiteUrl    String?  @db.VarChar(255)
+  address       String?  @db.VarChar(255)
+
+  ongId         Int      @unique
+  ong    Ong    @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+
+  @@map("ong_profiles")
 }
 
 model Admin {
@@ -103,4 +120,15 @@ enum DonationStatus {
 enum DonationType {
   monetary
   material
+}
+
+//Model for WishlistItem
+model WishlistItem {
+  id          Int     @id @default(autoincrement())
+  ongId      Int
+  description String  @db.VarChar(255)
+  quantity    Int
+  ong        Ong     @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+
+  @@map("wishlist_items")
 }
