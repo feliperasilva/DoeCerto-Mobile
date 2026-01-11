@@ -55,7 +55,7 @@ export class AdminsService {
   }
 
   // Aprovar ONG
-  async approveOng(ongId: number, adminId: number, reason?: string) {
+  async approveOng(ongId: number, adminId: number) {
     // Validar se admin existe
     const admin = await this.prisma.admin.findUnique({
       where: { userId: adminId },
