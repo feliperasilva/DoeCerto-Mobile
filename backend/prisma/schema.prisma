@@ -95,12 +95,14 @@ model Donation {
   donationStatus      DonationStatus @default(pending)
   monetaryAmount      Float?
   monetaryCurrency    String?        @db.VarChar(3)
+  proofOfPaymentUrl   String?        @db.VarChar(255)
   materialDescription String?        @db.Text
   materialQuantity    Int?
   donorId             Int
   ongId               Int
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
+  verifiedAt          DateTime?
   
   donor               Donor          @relation(fields: [donorId], references: [userId], onDelete: Cascade)
   ong                 Ong            @relation(fields: [ongId], references: [userId], onDelete: Cascade)
