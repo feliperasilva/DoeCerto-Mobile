@@ -10,7 +10,13 @@ import { ValidationUtil } from 'src/common/utils/validation.util';
 @Injectable()
 export class DonorsService {
   private readonly SALT_ROUNDS = 10;
-  private readonly donorInclude = { user: true } as const;
+  private readonly donorSelect = {
+    userId: true,
+    cpf: true,
+    user: {
+      select: { id: true, name: true, email: true }
+    }
+  } as const;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -51,31 +57,34 @@ export class DonorsService {
     };
   }
 
-  async findAll() {
-    const donors = await this.prisma.donor.findMany({
-      include: this.donorInclude,
-    });
+  async findAll(skip = 0, take = 20) {
+    const validTake = Math.min(Math.max(take, 1), 100);
+    const validSkip = Math.max(skip, 0);
 
-    return donors.map((donor) => ({
-      ...donor,
-      user: excludePassword(donor.user),
-    }));
+    const [donors, total] = await Promise.all([
+      this.prisma.donor.findMany({
+        select: this.donorSelect,
+        skip: validSkip,
+        take: validTake,
+        orderBy: { userId: 'desc' }
+      }),
+      this.prisma.donor.count()
+    ]);
+
+    return { data: donors, pagination: { skip: validSkip, take: validTake, total, pages: Math.ceil(total / validTake) } };
   }
 
   async findOne(id: number) {
     const donor = await this.prisma.donor.findUnique({
       where: { userId: id },
-      include: this.donorInclude,
+      select: this.donorSelect,
     });
 
     if (!donor) {
       throw new NotFoundException(`Donor with id ${id} not found`);
     }
 
-    return {
-      ...donor,
-      user: excludePassword(donor.user),
-    };
+    return donor;
   }
 
   async update(id: number, updateDonorDto: UpdateDonorDto) {
@@ -96,6 +105,7 @@ export class DonorsService {
     return this.prisma.donor.update({
       where: { userId: id },
       data: updateDonorDto,
+      select: this.donorSelect,
     });
   }
 
