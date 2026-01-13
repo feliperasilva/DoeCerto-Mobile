@@ -1,58 +1,38 @@
-# compiled output
-/dist
-/node_modules
-/build
+# Dependências
+node_modules/
+dist/
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
 
-# OS
+# Sistema operacional
 .DS_Store
+Thumbs.db
 
-# Tests
-/coverage
-/.nyc_output
+# IDEs
+.vscode/
+.idea/
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+# Uploads - Ignorar CONTEÚDO mas manter estrutura
+uploads/**/*
+!uploads/**/.gitkeep
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Ou se preferir especificar cada pasta:
+uploads/avatars/*
+!uploads/avatars/.gitkeep
+uploads/payment-proofs/*
+!uploads/payment-proofs/.gitkeep
+uploads/ong-documents/*
+!uploads/ong-documents/.gitkeep
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# temp directory
-.temp
-.tmp
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-/generated/prisma
+# Prisma
+prisma/migrations/
+!prisma/migrations/.gitkeep
+generated/
