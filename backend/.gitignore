@@ -20,17 +20,15 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Uploads - Ignorar CONTEÚDO mas manter estrutura
-uploads/**/*
-!uploads/**/.gitkeep
-
-# Ou se preferir especificar cada pasta:
-uploads/avatars/*
-!uploads/avatars/.gitkeep
+# Ignorar tudo dentro dessas pastas mas manter as pastas
 uploads/payment-proofs/*
+uploads/profiles/*
+
+# Permitir que .gitkeep seja rastreado
 !uploads/payment-proofs/.gitkeep
-uploads/ong-documents/*
-!uploads/ong-documents/.gitkeep
+!uploads/profiles/.gitkeep
+!uploads/payment-proofs/.gitignore
+!uploads/profiles/.gitignore
 
 # Prisma
 prisma/migrations/
