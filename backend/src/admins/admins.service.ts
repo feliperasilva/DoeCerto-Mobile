@@ -65,7 +65,7 @@ export class AdminsService {
 
     const ong = await this.prisma.ong.findUnique({
       where: { userId: ongId },
-      include: { user: true },
+      select: { userId: true, cnpj: true }
     });
     
     if (!ong) throw new NotFoundException('ONG not found');
@@ -76,14 +76,15 @@ export class AdminsService {
         verificationStatus: 'verified',
         verifiedAt: new Date(),
         verifiedById: adminId,
-        rejectionReason: null, // Limpa motivo de rejeição anterior
+        rejectionReason: null,
       },
-      include: { 
-        user: true,
-        verifiedBy: {
-          include: { user: true }
-        }
-      },
+      select: {
+        userId: true,
+        cnpj: true,
+        verificationStatus: true,
+        verifiedAt: true,
+        user: { select: { id: true, name: true, email: true } }
+      }
     });
     
     return updatedOng;
@@ -100,7 +101,7 @@ export class AdminsService {
 
     const ong = await this.prisma.ong.findUnique({
       where: { userId: ongId },
-      include: { user: true },
+      select: { userId: true, cnpj: true }
     });
     
     if (!ong) throw new NotFoundException('ONG not found');
@@ -113,12 +114,14 @@ export class AdminsService {
         verifiedById: adminId,
         rejectionReason: reason,
       },
-      include: { 
-        user: true,
-        verifiedBy: {
-          include: { user: true }
-        }
-      },
+      select: {
+        userId: true,
+        cnpj: true,
+        verificationStatus: true,
+        verifiedAt: true,
+        rejectionReason: true,
+        user: { select: { id: true, name: true, email: true } }
+      }
     });
     
     return updatedOng;
