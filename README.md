@@ -24,14 +24,22 @@
 
 ## 📋 Sobre
 
-O **DoeCerto Backend** é uma API RESTful desenvolvida com NestJS que gerencia doações entre doadores e ONGs. A plataforma permite:
+O **DoeCerto Backend** é uma API RESTful de alta performance desenvolvida com NestJS que gerencia doações entre doadores e ONGs de forma segura e eficiente. A plataforma oferece:
 
-- ✅ Registro e autenticação de doadores e ONGs
-- ✅ Criação de doações materiais e monetárias
-- ✅ Gerenciamento de status de doações (pendente, concluída, cancelada)
-- ✅ Sistema de verificação de ONGs
-- ✅ Controle de acesso baseado em roles (RBAC)
-- ✅ Histórico completo de transações
+### Funcionalidades Principais
+- ✅ **Autenticação segura** - JWT com cookies httpOnly e refresh tokens
+- ✅ **Gestão de usuários** - Doadores, ONGs e Administradores
+- ✅ **Doações flexíveis** - Materiais (alimentos, roupas, etc.) e monetárias
+- ✅ **Verificação de ONGs** - Sistema de aprovação por administradores
+- ✅ **Status de doações** - Rastreamento completo (pendente, concluída, cancelada)
+- ✅ **Controle de acesso** - RBAC (Role-Based Access Control)
+- ✅ **Histórico completo** - Auditoria de todas as transações
+
+### Otimizações de Performance
+- ⚡ **Queries otimizadas** - Prevenção de N+1 queries com Prisma select
+- ⚡ **Paginação eficiente** - Endpoints paginados com validação de limites
+- ⚡ **Validação robusta** - CPF/CNPJ validados no nível de aplicação
+- ⚡ **Cache de autenticação** - JWT stateless para escalabilidade
 
 ---
 
@@ -244,50 +252,198 @@ A documentação completa dos endpoints está disponível em:
 
 ### Resumo Rápido
 
-#### Autenticação
-- `POST /auth/login` - Login
-- `POST /auth/register/donor` - Registrar doador
-- `POST /auth/register/ong` - Registrar ONG
-- `POST /auth/logout` - Logout
+#### 🔐 Autenticação
+- `POST /auth/login` - Login com email/senha
+- `POST /auth/register/donor` - Registrar doador (CPF obrigatório)
+- `POST /auth/register/ong` - Registrar ONG (CNPJ obrigatório)
+- `POST /auth/logout` - Logout seguro
+- `GET /auth/me` - Perfil do usuário autenticado
 
-#### Doações
-- `POST /donations` - Criar doação (apenas doadores)
-- `GET /donations` - Listar todas as doações
-- `GET /donations/sent` - Doações enviadas (doador)
-- `GET /donations/received` - Doações recebidas (ONG)
-- `PATCH /donations/:id` - Atualizar doação
+#### 💝 Doações
+- `POST /donations` - Criar doação (apenas doadores autenticados)
+- `GET /donations?skip=0&take=20` - Listar doações (paginado)
+- `GET /donations/:id` - Detalhes de uma doação
+- `GET /donations/sent?skip=0&take=20` - Doações enviadas (doador)
+- `GET /donations/received?skip=0&take=20` - Doações recebidas (ONG)
+- `PATCH /donations/:id` - Atualizar status da doação
 - `DELETE /donations/:id` - Cancelar doação
 
-#### ONGs
-- `GET /ongs` - Listar ONGs (público)
-- `GET /ongs/:id` - Ver perfil da ONG (público)
+#### 🏢 ONGs
+- `GET /ongs?skip=0&take=20` - Listar ONGs verificadas (paginado)
+- `GET /ongs/:id` - Ver perfil completo da ONG
 - `PATCH /ongs/:id` - Atualizar perfil (própria ONG)
 
-#### Doadores
-- `GET /donors` - Listar doadores (admin)
-- `GET /donors/:id` - Ver perfil
+#### 👥 Doadores
+- `GET /donors?skip=0&take=20` - Listar doadores (admin, paginado)
+- `GET /donors/:id` - Ver perfil do doador
 - `PATCH /donors/:id` - Atualizar perfil (próprio doador)
 
-### Testando a API
+#### ⚙️ Administração
+- `POST /admins/approve-ong/:id` - Aprovar ONG
+- `POST /admins/reject-ong/:id` - Rejeitar ONG
+- 1. Registrar doador
+curl -X POST http://localhost:3000/auth/register/donor \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "João Silva",
+    "email": "joao@example.com",
+    "password": "senha123",
+    "cpf": "12345678901"
+  }'
 
-#### Com cURL:
-
-```bash
-# Login
+# 2. Login
 curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "senha123"}' \
+  -d '{"email": "joao@example.com", "password": "senha123"}' \
   -c cookies.txt
 
-# Criar doação
+# 3. Listar ONGs (com paginação)
+curl -X GET "http://localhost:3000/ongs?skip=0&take=10" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt
+
+# 4. Criar doação material
 curl -X POST http://localhost:3000/donations \
   -H "Content-Type: application/json" \
   -b cookies.txt \
   -d '{
     "ongId": 1,
     "donationType": "material",
-    "materialDescription": "10 pacotes de arroz",
+    "materialDescription": "10 pacotes de arroz de 5kg",
     "materialQuantity": 10
+  }'
+
+# 5. Criar doação monetária
+curl -X POST http://localhost:3000/donations \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{
+    "ongId": 1,
+    "donationType": "monetary",
+    "monetaryAmount": 150.50,
+    "monetaryCurrency": "BRL",
+    "proofOfPaymentUrl": "/uploads/comprovante.jpg"
+  }'
+
+# 6. Ver minhas doações enviadas (paginado)
+curl -X GET "http://localhost:3000/donations/sent?skip=0&take=20" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt
+```
+
+#### Com Postman/Insomnia:
+
+1. **Configure o ambiente**
+   - Variável `BASE_URL`: `http://localhost:3000`
+   - Habilite "Automatically follow redirects"
+   - Habilite "Enable cookie jar"
+
+2. **Faça o login**
+   - POST `{{BASE_URL}}/auth/login`
+   - O cookie JWT será salvo automaticamente
+
+3. **Use os endpoints protegidos**
+   - Os cookies são enviados automaticamente
+   - Não precisa adicionar headers manualmente
+
+4. **Testando paginação**
+   - Adicione query params: `?skip=0&take=20`
+   - Valores padrão: skip=0, take=20
+   - Máximo permitido: take=100
+
+#### Exemplo de Resposta Paginada:
+
+```json
+{ NestJS**: Organização por feature (donations, ongs, donors, auth)
+- **DTOs (Data Transfer Objects)**: Validação e transformação automática com `class-validator`
+- **Guards**: Proteção de rotas (JwtAuthGuard, RolesGuard)
+- **Decorators Customizados**: `@CurrentUser()`, `@Roles()`, `@Public()`
+- **Services**: Lógica de negócio e regras de domínio
+- **Controllers**: Camada HTTP com validação de entrada
+- **Repository Pattern**: Prisma Service como única camada de acesso ao BD
+- **Dependency Injection**: Injeção de dependências nativa do NestJS
+
+### Princípios de Performance Aplicados
+
+1. **Query Optimization**
+   - ✅ Uso de `select` específico ao invés de `include` genérico
+   - ✅ Prevenção de N+1 queries com eager loading seletivo
+   - ✅ Projeção de apenas campos necessários
+
+2. **Paginação**
+   - ✅ Todos os endpoints de listagem são paginados
+   - ✅ Validação de limites (máximo 100 itens por página)
+   - ✅ Retorno de metadados de paginação (total, páginas)
+
+3. **Validação em Camadas**
+   - ✅ DTOs validados no controller (class-validator)
+   - ✅ Validação de negócio no service
+   - ✅ Constraints no banco de dados (Prisma schema)
+
+4. **Segurança**
+   - ✅ Senhas nunca retornadas nas queries
+   - ✅ JWT stateless para escalabilidade
+   - ✅ Validação de CPF/CNPJ antes de persistir
+Cliente → POST /donations
+            ↓
+       JwtAuthGuard ✓ (verifica token válido)
+            ↓
+       RolesGuard ✓ (verifica role = 'donor')
+            ↓
+       DonationsController (valida DTO)
+            ↓
+       DonationsService
+            ↓
+       ├─ Verifica se ONG existe
+       ├─ Verifica se ONG está verificada
+       ├─ Valida dados da doação (tipo, valores)
+       ↓
+       Prisma.donation.create({
+         data: { ... },
+         select: { 
+           id, donationType, donationStatus,
+           ong: { select: { userId, user: { select: { name } } } },
+           donor: { select: { userId, user: { select: { name } } } }
+         }
+       })
+            ↓
+       Retorna doação criada (sem dados sensíveis)
+```
+
+### Fluxo de Aprovação de ONG (Admin)
+
+```
+Admin → POST /admins/approve-ong/:id
+            ↓
+       JwtAuthGuard ✓
+            ↓
+       RolesGuard ✓ (verifica role = 'admin')
+            ↓
+       AdminsController
+            ↓
+       AdminsService
+            ↓
+       ├─ Verifica se ONG existe
+       ├─ Verifica se está pendente
+       ↓
+       Prisma.$transaction([
+         ong.update({ verificationStatus: 'verified', verifiedById: adminId }),
+         // outros updates...
+       ])
+            ↓
+       Retorna ONG atualiz
+        }
+      }
+    }
+  ],
+  "pagination": {
+    "skip": 0,
+    "take": 20,
+    "total": 50,
+    "pages": 3
+  }
+}
+```
   }'
 ```
 
@@ -357,22 +513,75 @@ Cliente → Login → AuthService
                      ↓
          Próximas requisições → JwtAuthGuard
                                       ↓
-                                Valida JWT
-                                      ↓
-                               Injeta @CurrentUser
-                                      ↓
+            Tabela base de usuários
+  - Campos: id, name, email, password (hash), role, timestamps
+  - Relacionamentos: 1-1 com Donor, Ong ou Admin
+
+- **Donor**: Perfil de doadores
+  - Campos: userId (PK), cpf (unique), timestamps
+  - Relacionamentos: 1-N com Donation (doações enviadas)
+
+- **Ong**: Perfil de ONGs
+  - Campos: userId (PK), cnpj (unique), verificationStatus, verifiedById, rejectionReason
+  - Status: pending, verified, rejected
+  - Relacionamentos: 1-N com Donation (doações recebidas), 1-1 com OngProfile
+
+- **OngProfile**: Perfil detalhado da ONG
+  - Campos: bio, avatarUrl, contactNumber, websiteUrl, address
+
+- **Donation**: Registro de doações
+  - Campos: id, donationType (monetary/material), donationStatus (pending/completed/canceled)
+  - Campos monetários: monetaryAmount, monetaryCurrency, proofOfPaymentUrl
+  - Campos materiais: materialDescription, materialQuantity
+  - Relacionamentos: N-1 com Donor, N-1 com Ong
+
+- **Admin**: Perfil de administradores
+  - Campos: userId (PK)
+  - Relacionamentos: 1-N com Ong (ONGs verificadas por este admin)
+
+- **WishlistItem**: Lista de desejos de ONGs
+  - Campos: id, ongId, description, quantity
+
+### Índices para Performance
+
+```prisma
+// Índices implementados para queries otimizadas
+@@index([email]) // User - lookup rápido no login
+@@index([verificationStatus]) // Ong - filtrar por status
+@@index([donorId, donationStatus]) // Donation - doações do donor por status
+@@index([ongId, donationStatus]) // Donation - doações da ong por status
+@@index([donorId, createdAt]) // Donation - histórico ordenado
+@@index([ongId, createdAt]) // Donation - histórico ordenado
+```
                                  Controller
 ```
 
 ### Fluxo de Doação
 
-```
-Donor → POST /donations → JwtAuthGuard
-                             ↓
-                        RolesGuard (donor)
-                             ↓
-                      DonationsController
-                             ↓
+#### Autenticação e Autorização
+- ✅ **Passwords**: Hash com bcrypt (10 salt rounds)
+- ✅ **JWT**: Tokens assinados com secret forte, expiração de 24h
+- ✅ **Cookies**: httpOnly (não acessível via JS), secure (HTTPS em prod), sameSite: strict
+- ✅ **RBAC**: Sistema de roles (admin, donor, ong) com Guards
+- ✅ **Stateless**: JWT permite escalabilidade horizontal
+
+#### Validação de Dados
+- ✅ **DTOs**: Validação automática com class-validator
+- ✅ **CPF/CNPJ**: Validação com biblioteca @sh4rkzy/brazilian-validator
+- ✅ **Email**: Validação de formato e unicidade
+- ✅ **Sanitização**: Class-transformer remove campos extras
+
+#### Proteção de Banco de Dados
+- ✅ **SQL Injection**: Prisma ORM com prepared statements automático
+- ✅ **Constraints**: Unique, foreign keys, não-nulos definidos no schema
+- ✅ **Transactions**: Operações críticas envolvidas em transações
+- ✅ **Cascata**: Delete em cascata para manter integridade
+
+#### Segurança de API
+- ✅ **CORS**: Configurado para origem específica do frontend
+- ✅ **Rate Limiting**: (Recomendado implementar para produção)
+- ✅ **Helmet**: (Recomendado para headers de segurança)
+- ✅ **Logging**: Registro de operações sensívei
                       DonationsService
                              ↓
                   Valida ONG (existe + verificada)
@@ -402,105 +611,185 @@ O Repositório front-end pode ser acssado em:
 │ email   │     │         │                  │
 │ password│     │         │ donorId          │ ongId
 │ role    │     │         │                  │
-│ name    │     │   ┌──────────────┐         │
-└─────────┘     └───│  Donation    │─────────┘
-                    │              │
-                    │ id (PK)      │
-                    │ donorId (FK) │
-                    │ ongId (FK)   │
-                    │ donationType │
-                    │ status       │
-                    │ amount       │
-                    └──────────────┘
-```
+│ Causa**: Banco de dados não está rodando ou credenciais incorretas
 
-### Principais Tabelas
-
-- **User**: Usuários base (donors, ongs, admins)
-- **Donor**: Perfil de doadores (CPF)
-- **Ong**: Perfil de ONGs (CNPJ, isVerified)
-- **Donation**: Doações (material ou monetária)
-
-### Executar Prisma Studio
-
-Para visualizar e editar dados no banco:
-
-```bash
-npx prisma studio
-```
-
-Acesse: `http://localhost:5555`
-
----
-
-## 🔒 Segurança
-
-### Implementações de Segurança
-
-- ✅ **Passwords**: Hash com bcrypt (10 rounds)
-- ✅ **JWT**: Tokens com expiração de 24h
-- ✅ **Cookies**: httpOnly, secure (prod), sameSite: strict
-- ✅ **CORS**: Configurado para frontend específico
-- ✅ **Validação**: DTOs com class-validator
-- ✅ **RBAC**: Guards de roles (admin, donor, ong)
-- ✅ **SQL Injection**: Prisma ORM com prepared statements
-
-### Variáveis Sensíveis
-
-⚠️ Nunca versione:
-- `.env` - Variáveis de ambiente
-- `node_modules/` - Dependências
-- `dist/` - Build de produção
-
----
-
-## 🧪 Testes
-
-```bash
-# Testes unitários
-npm run test
-
-# Testes e2e
-npm run test:e2e
-
-# Cobertura
-npm run test:cov
-```
-
----
-
-## 📝 Scripts Disponíveis
-
-| Script | Descrição |
-|--------|-----------|
-| `npm run start` | Inicia em modo normal |
-| `npm run start:dev` | Inicia em modo watch (desenvolvimento) |
-| `npm run start:prod` | Inicia em modo produção |
-| `npm run build` | Compila TypeScript para JavaScript |
-| `npm run format` | Formata código com Prettier |
-| `npm run lint` | Executa ESLint e corrige |
-| `npm run test` | Executa testes |
-| `npx prisma migrate dev` | Cria e aplica migration |
-| `npx prisma studio` | Abre interface visual do banco |
-| `npx prisma generate` | Gera Prisma Client |
-
----
-
-## 🐛 Troubleshooting
-
-### Erro: "Can't connect to MySQL server"
-
-**Solução**:
+**Soluções**:
 1. Verifique se o Docker está rodando: `docker ps`
 2. Inicie o banco: `docker-compose up -d`
-3. Aguarde o healthcheck: `docker-compose ps`
+3. Aguarde o healthcheck (~30s): `docker-compose ps`
+4. Verifique logs: `docker-compose logs mysql`
+5. Confirme credenciais no `.env` com `docker-compose.yml`
 
 ### Erro: "Prisma Client not found"
+
+**Causa**: Cliente Prisma não foi gerado após alteração no schema
 
 **Solução**:
 ```bash
 npx prisma generate
 ```
+
+Se persistir:
+```bash
+rm -rf node_modules generated
+npm install
+npx prisma generate
+```
+
+### Erro: "Port 3000 already in use"
+
+**Causa**: Outra aplicação usando a porta 3000
+
+**Soluções**:
+```bash
+# Opção 1: Mudar porta no .env
+echo "PORT=3001" >> .env
+
+# Opção 2: Matar processo na porta 3000 (Linux/Mac)
+lsof -ti:3000 | xargs kill -9
+
+# Opção 3: Matar processo (Windows)
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+```
+
+### Erro: "JWT malformed" ou "Unauthorized"
+
+**Causa**: Token JWT inválido ou expirado
+
+**Soluções**:
+1. Faça login novamente: `POST /auth/login`
+2. Verifique se `JWT_SECRET` no `.env` é consistente
+3. Limpe cookies do navegador/Postman
+4. Confirme que o cookie está sendo enviado nas requisições
+
+### Migrations falhando
+
+**Causa**: Conflito no histórico de migrations ou schema inválido
+
+**Soluções**:
+```bash
+# Ver status das migrations
+npx prisma migrate status
+
+# Opção 1: Reset completo (⚠️ APAGA TODOS OS DADOS)
+npx prisma migrate reset
+
+# Opção 2: Criar migration sem aplicar (para revisar)
+npx prisma migrate dev --create-only
+
+# Opção 3: Resolver drift manualmente
+npx prisma migrate resolve --applied <migration_name>
+```
+
+### Erro: "Unique constraint failed"
+
+**Causa**: Tentando criar registro com valor duplicado (email, CPF, CNPJ)
+
+**Solução**:
+- Verifique se email/CPF/CNPJ já existe no banco
+- Use DTOs de atualização ao invés de criação
+- Consulte banco antes de inserir: `npx prisma studio`
+
+### Performance lenta
+
+**Diagnóstico**:
+```bash
+# Ativar query logging no Prisma
+# Adicione no schema.prisma:
+# generator client {
+#   provider = "prisma-client-js"
+#   previewFeatures = ["tracing"]
+# }
+
+# Verificar queries lentas nos logs
+docker-compose logs -f backend
+
+# Ver queries no Prisma Studio
+npx prisma studio
+```
+
+**Soluções**:
+- ✅ Use paginação em todos os endpoints de listagem
+- ✅🌟 Boas Práticas Implementadas
+
+### Código Limpo
+- ✅ **Separação de responsabilidades**: Controller → Service → Repository
+- ✅ **DRY**: Utilities compartilhadas (ValidationUtil, excludePassword)
+- ✅ **Nomenclatura clara**: Nomes descritivos para classes, métodos e variáveis
+- ✅ **Tipagem forte**: TypeScript em 100% do código
+
+### Performance
+- ✅ **Queries eficientes**: Select específico, prevenção de N+1
+- ✅ **Paginação**: Todos os endpoints de listagem
+- ✅ **Transações**: Operações multi-tabela atômicas
+- ✅ **Índices**: Colunas frequentemente consultadas indexadas
+
+### Manutenibilidade
+- ✅ **Modularização**: Features isoladas em módulos
+- ✅ **DTOs**: Contratos claros de entrada/saída
+- ✅ **Validação centralizada**: Class-validator + custom validators
+- ✅ **Erros descritivos**: Exceptions com mensagens claras
+
+### Segurança
+- ✅ **Autenticação robusta**: JWT + bcrypt
+- ✅ **Autorização granular**: RBAC com Guards
+- ✅ **Validação de entrada**: Sanitização automática
+- ✅ **Proteção de dados**: Passwords nunca expostos
+
+---
+
+## 📞 Suporte
+
+Para questões e suporte:
+- 📧 Email: suporte@doecerto.com
+- 🐛 Issues: [GitHub Issues](https://github.com/feliperasilva/DoeCerto-Mobile/issues)
+- 📖 Documentação: Veja [API_ENDPOINTS.md](./API_ENDPOINTS.md) para detalhes da API
+
+---
+
+## 🚀 Roadmap
+
+### Próximas Funcionalidades
+- [ ] Sistema de notificações (email/push)
+- [ ] Dashboard de estatísticas para ONGs
+- [ ] Sistema de rating/avaliação de ONGs
+- [ ] Chat entre doador e ONG
+- [ ] Campanhas de arrecadação com metas
+- [ ] Relatórios de impacto social
+- [ ] Integração com gateways de pagamento
+- [ ] API de webhooks para eventos
+
+### Melhorias Técnicas
+- [ ] Rate limiting com Redis
+- [ ] Cache de queries com Redis
+- [ ] Logs estruturados (Winston/Pino)
+- [ ] Monitoramento com Prometheus/Grafana
+- [ ] Testes E2E completos
+- [ ] CI/CD com GitHub Actions
+- [ ] Documentação Swagger/OpenAPI
+- [ ] Health checks e métricas
+
+---
+
+<p align="center">
+  Desenvolvido com ❤️ usando NestJS
+</p>
+
+<p align="center">
+  <a href="https://nestjs.com/" target="_blank">
+    <img src="https://img.shields.io/badge/NestJS-v11-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS"/>
+  </a>
+  <a href="https://www.typescriptlang.org/" target="_blank">
+    <img src="https://img.shields.io/badge/TypeScript-v5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
+  </a>
+  <a href="https://www.prisma.io/" target="_blank">
+    <img src="https://img.shields.io/badge/Prisma-v6-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma"/>
+  </a>
+  <a href="https://www.mysql.com/" target="_blank">
+    <img src="https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
+  </a>
+</p>
 
 ### Erro: "Port 3000 already in use"
 

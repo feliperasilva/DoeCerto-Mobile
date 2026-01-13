@@ -4,10 +4,28 @@ import { CreateOngProfileDto } from './dto/create-profile.dto';
 
 @Injectable()
 export class OngProfilesService {
+  private readonly profileSelect = {
+    id: true,
+    ongId: true,
+    bio: true,
+    avatarUrl: true,
+    contactNumber: true,
+    websiteUrl: true,
+    address: true,
+    ong: {
+      select: {
+        userId: true,
+        cnpj: true,
+        user: {
+          select: { id: true, name: true, email: true }
+        }
+      }
+    }
+  } as const;
+
   constructor(private prisma: PrismaService) {}
 
   async createOrUpdate(userId: number, dto: CreateOngProfileDto, avatarPath?: string) {
-
     const ongExists = await this.prisma.ong.findUnique({
       where: { userId },
     });
@@ -35,7 +53,7 @@ export class OngProfilesService {
   async findOne(userId: number) {
     const profile = await this.prisma.ongProfile.findUnique({
       where: { ongId: userId },
-      include: { ong: true }
+      select: this.profileSelect
     });
     
     if (!profile) throw new NotFoundException('Perfil não encontrado');

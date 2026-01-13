@@ -6,59 +6,42 @@ import {
   Param, 
   UseInterceptors, 
   UploadedFile, 
-  ParseIntPipe, 
-  ForbiddenException, 
-  Req,
-  UseGuards
+  ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { OngProfilesService } from './ong-profiles.service';
 import { CreateOngProfileDto } from './dto/create-profile.dto';
+import { ImageProcessingService } from '../common/services/image-processing.service';
+import { multerAvatarConfig } from '../config/multer-avatar.config';
 
 @Controller('ong-profiles')
 export class OngProfilesController {
-  constructor(private readonly ongProfilesService: OngProfilesService) {}
+  constructor(
+    private readonly ongProfilesService: OngProfilesService,
+    private readonly imageProcessingService: ImageProcessingService, // ✅ Injetar
+  ) {}
 
-  /**
-   * * @param req - Objeto de requisição contendo o usuário logado (userId e role).
-   * @param dto
-   * @param file
-   */
-  
   @Post(':userId') 
-  @UseInterceptors(FileInterceptor('file', {
-
-    storage: diskStorage({
-      destination: './uploads/profiles', // Pasta de destino
-      filename: (req, file, callback) => {
-
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = extname(file.originalname);
-        const filename = `ong-${uniqueSuffix}${ext}`;
-        callback(null, filename);
-      },
-    }),
-    
-    // 2. Filtro de Arquivos
-    fileFilter: (req, file, callback) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
-        return callback(new Error('Apenas arquivos de imagem são permitidos!'), false);
-      }
-      callback(null, true);
-    },
-    limits: { fileSize: 5 * 1024 * 1024 } // Limite de 5MB
-  }))
+  @UseInterceptors(FileInterceptor('file', multerAvatarConfig)) // ✅ Usar config centralizada
   async createOrUpdate(
-
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: CreateOngProfileDto,
-    
-    @UploadedFile() file?: Express.File, 
+    @UploadedFile() file?: Express.Multer.File,
   ) {
+    let avatarPath: string | undefined;
 
-    const avatarPath = file ? `/uploads/profiles/${file.filename}` : undefined;
+    if (file) {
+      try {
+        // ✅ Processar imagem: corta para 1:1, redimensiona para 512x512 e comprime
+        avatarPath = await this.imageProcessingService.processAvatarImage(
+          file.path,
+          512,
+        );
+      } catch (error) {
+        throw new BadRequestException('Falha ao processar imagem do avatar');
+      }
+    }
     
     return this.ongProfilesService.createOrUpdate(userId, dto, avatarPath);
   }

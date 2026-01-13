@@ -11,6 +11,8 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
@@ -35,8 +37,11 @@ export class DonorsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Get()
-  findAll() {
-    return this.donorsService.findAll();
+  findAll(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take: number,
+  ) {
+    return this.donorsService.findAll(skip, take);
   }
 
   // Authenticated - Can view any donor profile (public info)

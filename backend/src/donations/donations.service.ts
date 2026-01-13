@@ -10,14 +10,38 @@ import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class DonationsService {
-  private readonly donationInclude = {
-    ong: true,
-    donor: true,
+  private readonly donationSelect = {
+    id: true,
+    donationType: true,
+    donationStatus: true,
+    monetaryAmount: true,
+    monetaryCurrency: true,
+    materialDescription: true,
+    materialQuantity: true,
+    proofOfPaymentUrl: true,
+    createdAt: true,
+    updatedAt: true,
+    verifiedAt: true,
+    ong: {
+      select: {
+        userId: true,
+        cnpj: true,
+        verificationStatus: true,
+        user: { select: { id: true, name: true, email: true } }
+      }
+    },
+    donor: {
+      select: {
+        userId: true,
+        cpf: true,
+        user: { select: { id: true, name: true, email: true } }
+      }
+    }
   } as const;
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createDonationDto: CreateDonationDto, donorId: number) {
+  async create(createDonationDto: CreateDonationDto, donorId: number, proofOfPaymentUrl?: string) {
     const {
       ongId,
       materialDescription,
@@ -39,21 +63,33 @@ export class DonationsService {
         monetaryCurrency,
         materialDescription,
         materialQuantity,
+        proofOfPaymentUrl: proofOfPaymentUrl || null,
       },
-      include: this.donationInclude,
+      select: this.donationSelect,
     });
   }
 
-  async findAll() {
-    return this.prisma.donation.findMany({
-      include: this.donationInclude,
-    });
+  async findAll(skip = 0, take = 20) {
+    const validTake = Math.min(Math.max(take, 1), 100);
+    const validSkip = Math.max(skip, 0);
+
+    const [data, total] = await Promise.all([
+      this.prisma.donation.findMany({
+        select: this.donationSelect,
+        skip: validSkip,
+        take: validTake,
+        orderBy: { createdAt: 'desc' }
+      }),
+      this.prisma.donation.count()
+    ]);
+
+    return { data, pagination: { skip: validSkip, take: validTake, total, pages: Math.ceil(total / validTake) } };
   }
 
   async findOne(id: number) {
     const donation = await this.prisma.donation.findUnique({
       where: { id },
-      include: this.donationInclude,
+      select: this.donationSelect,
     });
 
     if (!donation) {
@@ -63,30 +99,50 @@ export class DonationsService {
     return donation;
   }
 
-  async findByDonor(donorId: number, type?: DonationType) {
+  async findByDonor(donorId: number, type?: DonationType, skip = 0, take = 20) {
     const where: Prisma.DonationWhereInput = { donorId };
+    const validTake = Math.min(Math.max(take, 1), 100);
+    const validSkip = Math.max(skip, 0);
 
     if (type) {
       where.donationType = type;
     }
 
-    return this.prisma.donation.findMany({
-      where,
-      include: this.donationInclude,
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.donation.findMany({
+        where,
+        select: this.donationSelect,
+        skip: validSkip,
+        take: validTake,
+        orderBy: { createdAt: 'desc' }
+      }),
+      this.prisma.donation.count({ where })
+    ]);
+
+    return { data, pagination: { skip: validSkip, take: validTake, total, pages: Math.ceil(total / validTake) } };
   }
 
-  async findByOng(ongId: number, type?: DonationType) {
+  async findByOng(ongId: number, type?: DonationType, skip = 0, take = 20) {
     const where: Prisma.DonationWhereInput = { ongId };
+    const validTake = Math.min(Math.max(take, 1), 100);
+    const validSkip = Math.max(skip, 0);
 
     if (type) {
       where.donationType = type;
     }
 
-    return this.prisma.donation.findMany({
-      where,
-      include: this.donationInclude,
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.donation.findMany({
+        where,
+        select: this.donationSelect,
+        skip: validSkip,
+        take: validTake,
+        orderBy: { createdAt: 'desc' }
+      }),
+      this.prisma.donation.count({ where })
+    ]);
+
+    return { data, pagination: { skip: validSkip, take: validTake, total, pages: Math.ceil(total / validTake) } };
   }
 
   async update(
@@ -156,7 +212,7 @@ export class DonationsService {
     return this.prisma.donation.update({
       where: { id },
       data: updateData,
-      include: this.donationInclude,
+      select: this.donationSelect,
     });
   }
 
