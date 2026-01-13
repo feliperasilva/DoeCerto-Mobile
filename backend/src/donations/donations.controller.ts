@@ -6,102 +6,129 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe,
   UseGuards,
-  Query,
+  ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Query,
   ForbiddenException,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  DefaultValuePipe,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { User, DonationType } from 'generated/prisma';
 import { DonationsService } from './donations.service';
-import { CreateDonationDto, DonationType } from './dto/create-donation.dto';
+import { CreateDonationDto } from './dto/create-donation.dto';
 import { UpdateDonationDto } from './dto/update-donation.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import type { User } from 'generated/prisma';
+import { multerPaymentProofConfig } from 'src/config/multer-payment-proof.config';
+import { ImageProcessingService } from 'src/common/services/image-processing.service';
 
 @Controller('donations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard) // Ambos no controller
 export class DonationsController {
-  constructor(private readonly donationsService: DonationsService) {}
+  constructor(
+    private readonly donationsService: DonationsService,
+    private readonly imageProcessingService: ImageProcessingService,
+  ) {}
 
-  // Only donors can create donations
-  @UseGuards(RolesGuard)
-  @Roles('donor')
+  // ✅ DOADOR: Criar doação
+  @Roles('donor') // Só o decorator @Roles
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(
+  @UseInterceptors(FileInterceptor('proofFile', multerPaymentProofConfig))
+  async create(
     @Body() createDonationDto: CreateDonationDto,
     @CurrentUser() user: User,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.donationsService.create(createDonationDto, user.id);
+    let proofPath: string | undefined;
+
+    if (file) {
+      try {
+        proofPath = await this.imageProcessingService.processPaymentProof(
+          file.path,
+        );
+      } catch (error) {
+        throw new BadRequestException('Falha ao processar comprovante de pagamento');
+      }
+    }
+
+    return this.donationsService.create(createDonationDto, user.id, proofPath);
   }
 
-  // Authenticated users can see all donations
+  // ✅ PÚBLICO: Listar todas as doações (sem role)
   @Get()
-  findAll() {
-    return this.donationsService.findAll();
+  findAll(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take = 20,
+  ) {
+    return this.donationsService.findAll(skip, take);
   }
 
-  // Donor gets their sent donations (doações enviadas)
-  @UseGuards(RolesGuard)
+  // ✅ DOADOR: Visualizar minhas doações enviadas
   @Roles('donor')
   @Get('sent')
   getSentDonations(
     @CurrentUser() user: User,
     @Query('type') type?: DonationType,
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take = 20,
   ) {
-    return this.donationsService.findByDonor(user.id, type);
+    return this.donationsService.findByDonor(user.id, type, skip, take);
   }
 
-  // ONG gets their received donations (doações recebidas)
-  @UseGuards(RolesGuard)
+  // ✅ ONG: Visualizar doações recebidas
   @Roles('ong')
   @Get('received')
-  getReceivedDonations(
+  async getReceivedDonations(
     @CurrentUser() user: User,
     @Query('type') type?: DonationType,
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take = 20,
   ) {
-    return this.donationsService.findByOng(user.id, type);
+    return this.donationsService.findByOng(user.id, type, skip, take);
   }
 
-  // Get donations by donor (admin can see any, donors can see their own)
+  // ✅ PÚBLICO: Visualizar doações de um doador (sem role)
   @Get('donor/:donorId')
   findByDonor(
     @Param('donorId', ParseIntPipe) donorId: number,
     @Query('type') type?: DonationType,
     @CurrentUser() user?: User,
   ) {
-    // Users can only see their own donations unless they're admin
     if (user && user.role !== 'admin' && user.id !== donorId) {
       throw new ForbiddenException('You can only view your own donations');
     }
     return this.donationsService.findByDonor(donorId, type);
   }
 
-  // Get donations by ONG (ONGs can see their own)
+  // ✅ PÚBLICO: Visualizar doações de uma ONG (sem role)
   @Get('ong/:ongId')
   findByOng(
     @Param('ongId', ParseIntPipe) ongId: number,
     @Query('type') type?: DonationType,
     @CurrentUser() user?: User,
   ) {
-    // ONGs can only see their own donations unless they're admin
     if (user && user.role !== 'admin' && user.id !== ongId) {
       throw new ForbiddenException('You can only view your own donations');
     }
     return this.donationsService.findByOng(ongId, type);
   }
 
-  // Authenticated users can view specific donation
+  // ✅ PÚBLICO: Visualizar uma doação específica (sem role)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.donationsService.findOne(id);
   }
 
-  // Donors and ONGs can update their donations (validated in service)
+  // ✅ DOADOR/ONG: Atualizar doação
+  @Roles('donor', 'ong')
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -111,8 +138,37 @@ export class DonationsController {
     return this.donationsService.update(id, updateDonationDto, user.id);
   }
 
-  // Donors can cancel their donations (validated in service)
-  @UseGuards(RolesGuard)
+  // ✅ ONG: ACEITAR doação
+  @Roles('ong')
+  @Patch(':id/accept')
+  @HttpCode(HttpStatus.OK)
+  async acceptDonation(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.donationsService.update(
+      id,
+      { donationStatus: 'completed' },
+      user.id,
+    );
+  }
+
+  // ✅ ONG: REJEITAR doação
+  @Roles('ong')
+  @Patch(':id/reject')
+  @HttpCode(HttpStatus.OK)
+  async rejectDonation(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.donationsService.update(
+      id,
+      { donationStatus: 'canceled' },
+      user.id,
+    );
+  }
+
+  // ✅ DOADOR: Cancelar doação
   @Roles('donor')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
