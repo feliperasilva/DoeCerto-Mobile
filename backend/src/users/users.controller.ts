@@ -11,6 +11,8 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -36,8 +38,11 @@ export class UsersController {
   // Admin only - List all users
   @Roles('admin')
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take: number,
+  ) {
+    return this.usersService.findAll(skip, take);
   }
 
   // Users can view their own profile or admin can view any

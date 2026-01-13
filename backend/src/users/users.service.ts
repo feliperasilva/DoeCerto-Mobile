@@ -29,17 +29,49 @@ export class UsersService {
     return excludePassword(user);
   }
 
-  async findAll(): Promise<UserResponseDto[]> {
-    const users = await this.prisma.user.findMany();
-    return users.map((u) => excludePassword(u));
+  async findAll(skip = 0, take = 20) {
+    const validTake = Math.min(Math.max(take, 1), 100);
+    const validSkip = Math.max(skip, 0);
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip: validSkip,
+        take: validTake,
+        orderBy: { id: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data: users,
+      pagination: { skip: validSkip, take: validTake, total, pages: Math.ceil(total / validTake) },
+    };
   }
 
-  async findOne(id: number): Promise<UserResponseDto> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    return excludePassword(user);
+    return user;
   }
 
   async findByEmail(email: string) {
