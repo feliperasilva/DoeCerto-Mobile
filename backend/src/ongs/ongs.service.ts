@@ -10,7 +10,17 @@ import { ValidationUtil } from 'src/common/utils/validation.util';
 @Injectable()
 export class OngsService {
   private readonly SALT_ROUNDS = 10;
-  private readonly ongInclude = { user: true } as const;
+  private readonly ongSelect = {
+    userId: true,
+    cnpj: true,
+    verificationStatus: true,
+    verifiedAt: true,
+    verifiedById: true,
+    rejectionReason: true,
+    user: {
+      select: { id: true, name: true, email: true }
+    }
+  } as const;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -51,31 +61,34 @@ export class OngsService {
     };
   }
 
-  async findAll() {
-    const ongs = await this.prisma.ong.findMany({
-      include: this.ongInclude,
-    });
+  async findAll(skip = 0, take = 20) {
+    const validTake = Math.min(Math.max(take, 1), 100);
+    const validSkip = Math.max(skip, 0);
 
-    return ongs.map((ong) => ({
-      ...ong,
-      user: excludePassword(ong.user),
-    }));
+    const [ongs, total] = await Promise.all([
+      this.prisma.ong.findMany({
+        select: this.ongSelect,
+        skip: validSkip,
+        take: validTake,
+        orderBy: { userId: 'desc' }
+      }),
+      this.prisma.ong.count()
+    ]);
+
+    return { data: ongs, pagination: { skip: validSkip, take: validTake, total, pages: Math.ceil(total / validTake) } };
   }
 
   async findOne(id: number) {
     const ong = await this.prisma.ong.findUnique({
       where: { userId: id },
-      include: this.ongInclude,
+      select: this.ongSelect,
     });
 
     if (!ong) {
       throw new NotFoundException(`ONG with id ${id} not found`);
     }
 
-    return {
-      ...ong,
-      user: excludePassword(ong.user),
-    };
+    return ong;
   }
 
   async update(id: number, updateOngDto: UpdateOngDto) {

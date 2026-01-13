@@ -11,6 +11,8 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { OngsService } from './ongs.service';
 import { CreateOngDto } from './dto/create-ong.dto';
@@ -33,8 +35,11 @@ export class OngsController {
 
   // Public - List all ONGs (for donors to browse)
   @Get()
-  findAll() {
-    return this.ongsService.findAll();
+  findAll(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take = 20,
+  ) {
+    return this.ongsService.findAll(skip, take);
   }
 
   // Public - View ONG profile (for donors to see details)
