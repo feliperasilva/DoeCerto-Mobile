@@ -40,25 +40,25 @@ export class AdminsController {
   }
 
   // Listar ONGs pendentes de verificação
-  @Get('ongs/pending')
+  @Get('ongs/status/pending')
   getPendingOngs() {
     return this.adminsService.pendentOngs();
   }
 
   // Listar ONGs verificadas/aprovadas
-  @Get('ongs/verified')
+  @Get('ongs/status/verified')
   getVerifiedOngs() {
     return this.adminsService.verifiedOngs();
   }
 
   // Listar ONGs rejeitadas
-  @Get('ongs/rejected')
+  @Get('ongs/status/rejected')
   getRejectedOngs() {
     return this.adminsService.rejectedOngs();
   }
 
   // Aprovar ONG
-  @Patch('ongs/:ongId/approve')
+  @Patch('ongs/:ongId/verification/approve')
   @HttpCode(HttpStatus.OK)
   approveOng(
     @Param('ongId', ParseIntPipe) ongId: number,
@@ -68,7 +68,7 @@ export class AdminsController {
   }
 
   // Reprovar ONG
-  @Patch('ongs/:ongId/reject')
+  @Patch('ongs/:ongId/verification/reject')
   @HttpCode(HttpStatus.OK)
   rejectOng(
     @Param('ongId', ParseIntPipe) ongId: number,
@@ -79,13 +79,13 @@ export class AdminsController {
   }
 
   // Ver estatísticas do próprio admin
-  @Get('stats/me')
+  @Get('me/stats')
   getMyStats(@CurrentUser() user: User) {
     return this.adminsService.getAdminStats(user.id);
   }
 
   // Ver estatísticas de outro admin (admin pode ver de qualquer admin)
-  @Get('stats/:adminId')
+  @Get(':adminId/stats')
   getAdminStats(@Param('adminId', ParseIntPipe) adminId: number) {
     return this.adminsService.getAdminStats(adminId);
   }

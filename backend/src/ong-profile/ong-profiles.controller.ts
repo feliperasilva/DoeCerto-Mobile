@@ -15,17 +15,17 @@ import { CreateOngProfileDto } from './dto/create-profile.dto';
 import { ImageProcessingService } from '../common/services/image-processing.service';
 import { multerAvatarConfig } from '../config/multer-avatar.config';
 
-@Controller('ong-profiles')
+@Controller('ongs/:ongId/profile')
 export class OngProfilesController {
   constructor(
     private readonly ongProfilesService: OngProfilesService,
     private readonly imageProcessingService: ImageProcessingService, // ✅ Injetar
   ) {}
 
-  @Post(':userId') 
+  @Post()
   @UseInterceptors(FileInterceptor('file', multerAvatarConfig)) // ✅ Usar config centralizada
   async createOrUpdate(
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('ongId', ParseIntPipe) ongId: number,
     @Body() dto: CreateOngProfileDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -43,11 +43,11 @@ export class OngProfilesController {
       }
     }
     
-    return this.ongProfilesService.createOrUpdate(userId, dto, avatarPath);
+    return this.ongProfilesService.createOrUpdate(ongId, dto, avatarPath);
   }
 
-  @Get(':userId')
-  async findOne(@Param('userId', ParseIntPipe) userId: number) {
-    return this.ongProfilesService.findOne(userId);
+  @Get()
+  async findOne(@Param('ongId', ParseIntPipe) ongId: number) {
+    return this.ongProfilesService.findOne(ongId);
   }
 }
