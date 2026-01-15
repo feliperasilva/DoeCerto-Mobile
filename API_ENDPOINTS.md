@@ -1,7 +1,7 @@
 # 🔐 DoeCerto API - Documentação Completa de Endpoints
 
 **Versão**: 1.0.0  
-**Data de Atualização**: 12 de janeiro de 2026  
+**Data de Atualização**: 14 de janeiro de 2026  
 **Status**: Em Produção
 
 ---
@@ -56,30 +56,29 @@
 - **Params**: `adminId: number`
 - **Response**: `204 No Content`
 
-### GET `/admins/ongs/pending` 👑
+### GET `/admins/ongs/status/pending` 👑
 - **Descrição**: Listar ONGs pendentes de verificação
 
-### GET `/admins/ongs/verified` 👑
+### GET `/admins/ongs/status/verified` 👑
 - **Descrição**: Listar ONGs já verificadas/aprovadas
 
-### GET `/admins/ongs/rejected` 👑
+### GET `/admins/ongs/status/rejected` 👑
 - **Descrição**: Listar ONGs rejeitadas
 
-### PATCH `/admins/ongs/:ongId/approve` 👑
-- **Descrição**: Aprovar e marcar ONG como verificada
+### PATCH `/admins/ongs/:ongId/verification/approve` 👑
+- **Descrição**: Aprovar e marcar ONG como `verified`
 - **Params**: `ongId: number`
-- **Response**: ONG atualizada como `VERIFIED`
+- **Response**: ONG atualizada como `verified`
 
-### PATCH `/admins/ongs/:ongId/reject` 👑
-- **Descrição**: Rejeitar ONG com justificativa
+### PATCH `/admins/ongs/:ongId/verification/reject` 👑
+- **Descrição**: Rejeitar ONG com justificativa (marca como `rejected`)
 - **Params**: `ongId: number`
 - **Body**: `{ reason: string }`
-- **Response**: ONG atualizada como `REJECTED`
 
-### GET `/admins/stats/me` 👑
+### GET `/admins/me/stats` 👑
 - **Descrição**: Estatísticas do admin logado (aprovações/rejeições realizadas)
 
-### GET `/admins/stats/:adminId` 👑
+### GET `/admins/:adminId/stats` 👑
 - **Descrição**: Estatísticas de um admin específico
 - **Params**: `adminId: number`
 
@@ -187,26 +186,26 @@
 - **Descrição**: Listar todas as doações
 - **Autorização**: Qualquer usuário autenticado
 
-### GET `/donations/sent` 👤
+### GET `/donations/me/sent` 👤
 - **Descrição**: Listar doações enviadas pelo doador logado
 - **Autorização**: Apenas doadores
 - **Query**: `?type=monetary|material` (opcional)
 - **Lógica**: Retorna doações onde `donorId` = ID do usuário logado
 
-### GET `/donations/received` 🏢
+### GET `/donations/me/received` 🏢
 - **Descrição**: Listar doações recebidas pela ONG logada
 - **Autorização**: Apenas ONGs
 - **Query**: `?type=monetary|material` (opcional)
 - **Lógica**: Retorna doações onde `ongId` = ID do usuário logado
 
-### GET `/donations/donor/:donorId` 🔒
+### GET `/donations/donors/:donorId` 🔒
 - **Descrição**: Listar doações de um doador específico
 - **Autorização**: Próprio doador ou admin
 - **Params**: `donorId: number`
 - **Query**: `?type=monetary|material` (opcional)
 - **Validação**: Verifica se `user.id === donorId` ou `user.role === 'admin'`
 
-### GET `/donations/ong/:ongId` 🔒
+### GET `/donations/ongs/:ongId` 🔒
 - **Descrição**: Listar doações para uma ONG específica
 - **Autorização**: Própria ONG ou admin
 - **Params**: `ongId: number`
@@ -256,12 +255,12 @@
 
 ---
 
-## 👥 ONG Profiles (`/ong-profiles`)
+## 👥 ONG Profiles (`/ongs/:ongId/profile`)
 
-### POST `/ong-profiles/:userId` 🏢
+### POST `/ongs/:ongId/profile` 🏢
 - **Descrição**: Criar ou atualizar perfil de ONG
-- **Autorização**: Apenas ONGs (self)
-- **Params**: `userId: number`
+- **Autorização**: Apenas a própria ONG
+- **Params**: `ongId: number`
 - **Content-Type**: `multipart/form-data` (suporta upload de avatar)
 - **Body**:
   ```json
@@ -280,31 +279,20 @@
   - Compressão JPEG
   - Salvo em `/uploads/profiles/`
 
-### GET `/ong-profiles/:userId` 🔓
+### GET `/ongs/:ongId/profile` 🔓
 - **Descrição**: Visualizar perfil de ONG
 - **Autorização**: Público (qualquer pessoa pode ver)
-- **Params**: `userId: number`
-- **Response**: 
-  ```json
-  {
-    "id": "number",
-    "bio": "string",
-    "avatarUrl": "string (caminho relativo)",
-    "contactNumber": "string",
-    "websiteUrl": "string",
-    "address": "string",
-    "ongId": "number",
-    "ong": { ... }
-  }
-  ```
+- **Params**: `ongId: number`
+- **Response**: Perfil da ONG com avatar e dados públicos
 
 ---
 
-## 🎁 Wishlist Items (`/wishlist-items`)
+## 🎁 Wishlist Items (`/ongs/:ongId/wishlist-items`)
 
-### POST `/wishlist-items` 🏢
-- **Descrição**: Criar item na lista de desejos
-- **Autorização**: Apenas ONGs
+### POST `/ongs/:ongId/wishlist-items` 🏢
+- **Descrição**: Criar item na lista de desejos da ONG
+- **Autorização**: Apenas a própria ONG
+- **Params**: `ongId: number`
 - **Body**:
   ```json
   {
@@ -313,34 +301,50 @@
   }
   ```
 - **Response**: Item criado com ID
-- **Validação**: Usuário logado deve ser ONG
+- **Validação**: `ongId` do path deve ser o da ONG autenticada
 
-### GET `/wishlist-items/ong/:ongId` 🔓
+### GET `/ongs/:ongId/wishlist-items` 🔓
 - **Descrição**: Listar todos os itens da wishlist de uma ONG
 - **Autorização**: Público
 - **Params**: `ongId: number`
 - **Response**: Array de wishlist items da ONG
 - **Uso**: Doadores podem ver o que a ONG precisa
 
-### GET `/wishlist-items/:id` 🔓
+### GET `/ongs/:ongId/wishlist-items/:id` 🔓
 - **Descrição**: Visualizar item específico da wishlist
 - **Autorização**: Público
-- **Params**: `id: number`
+- **Params**: `ongId: number`, `id: number`
 - **Response**: Detalhes do item
 
-### PATCH `/wishlist-items/:id` 🏢
+### PATCH `/ongs/:ongId/wishlist-items/:id` 🏢
 - **Descrição**: Atualizar item da wishlist
-- **Autorização**: Apenas ONG proprietária do item
-- **Params**: `id: number`
+- **Autorização**: Apenas ONG proprietária
+- **Params**: `ongId: number`, `id: number`
 - **Body**: `{ description?: string, quantity?: number }`
-- **Validação**: Verifica propriedade do item
+- **Validação**: ONG do item deve ser a mesma do path e do usuário logado
 
-### DELETE `/wishlist-items/:id` 🏢
+### DELETE `/ongs/:ongId/wishlist-items/:id` 🏢
 - **Descrição**: Remover item da wishlist
 - **Autorização**: Apenas ONG proprietária
-- **Params**: `id: number`
+- **Params**: `ongId: number`, `id: number`
 - **Status HTTP**: 200 OK
-- **Validação**: Verifica propriedade do item
+- **Validação**: ONG do item deve ser a mesma do path e do usuário logado
+
+---
+
+## ⭐ Ratings de ONG (`/ongs/:ongId/ratings`)
+
+### POST `/ongs/:ongId/ratings` 👤
+- **Descrição**: Criar ou atualizar nota de uma ONG
+- **Autorização**: Apenas doadores
+- **Params**: `ongId: number`
+- **Body**: `RatingDto { score: number, comment?: string }`
+
+### GET `/ongs/:ongId/ratings` 🔓
+- **Descrição**: Listar todas as notas/comentários de uma ONG
+- **Autorização**: Público
+- **Params**: `ongId: number`
+- **Query**: `skip` (default: 0), `take` (default: 20)
 
 ---
 
@@ -454,18 +458,20 @@ Agora ONGs podem receber doações ✅
 
 ### 5️⃣ Fluxo de Perfil e Wishlist da ONG
 ```
-ONG → POST /ong-profiles/:userId
-    → Envia: bio, contactNumber, websiteUrl, address, avatar
-    → Avatar processado: 512x512px, JPEG
-    → Salvo em /uploads/profiles/
+ONG → POST /ongs/:ongId/profile
+  → Envia: bio, contactNumber, websiteUrl, address, avatar
+  → Avatar processado: 512x512px, JPEG
+  → Salvo em /uploads/profiles/
     
-ONG → POST /wishlist-items
-    → Adiciona itens que precisa
+ONG → POST /ongs/:ongId/wishlist-items
+  → Adiciona itens que precisa
     
-Doadores → GET /ong-profiles/:userId
-        → Vê perfil e avatar
-        → GET /wishlist-items/ong/:ongId
-        → Vê o que a ONG precisa
+Doadores → GET /ongs/:ongId/profile
+    → Vê perfil e avatar
+    → GET /ongs/:ongId/wishlist-items
+    → Vê o que a ONG precisa
+    → GET /ongs/:ongId/ratings
+    → Vê avaliações da ONG
 ```
 
 ---
@@ -539,7 +545,7 @@ curl -X POST http://localhost:3000/donations \
 
 ### 6. Atualizar Perfil de ONG
 ```bash
-curl -X POST http://localhost:3000/ong-profiles/1 \
+curl -X POST http://localhost:3000/ongs/1/profile \
   -F "file=@/caminho/para/avatar.jpg" \
   -F 'createOngProfileDto={
     "bio": "ONG focada em educação infantil",
@@ -552,13 +558,13 @@ curl -X POST http://localhost:3000/ong-profiles/1 \
 
 ### 7. Listar Doações Enviadas (Doador)
 ```bash
-curl -X GET http://localhost:3000/donations/sent \
+curl -X GET http://localhost:3000/donations/me/sent \
   -b cookies.txt
 ```
 
 ### 8. Listar Doações Recebidas (ONG)
 ```bash
-curl -X GET http://localhost:3000/donations/received \
+curl -X GET http://localhost:3000/donations/me/received \
   -b cookies.txt
 ```
 
@@ -570,19 +576,19 @@ curl -X PATCH http://localhost:3000/donations/1/accept \
 
 ### 10. Listar ONGs Pendentes (Admin)
 ```bash
-curl -X GET http://localhost:3000/admins/ongs/pending \
+curl -X GET http://localhost:3000/admins/ongs/status/pending \
   -b cookies.txt
 ```
 
 ### 11. Aprovar ONG (Admin)
 ```bash
-curl -X PATCH http://localhost:3000/admins/ongs/1/approve \
+curl -X PATCH http://localhost:3000/admins/ongs/1/verification/approve \
   -b cookies.txt
 ```
 
 ### 12. Rejeitar ONG (Admin)
 ```bash
-curl -X PATCH http://localhost:3000/admins/ongs/1/reject \
+curl -X PATCH http://localhost:3000/admins/ongs/1/verification/reject \
   -H "Content-Type: application/json" \
   -b cookies.txt \
   -d '{"reason": "Documentação incompleta"}'
@@ -590,18 +596,34 @@ curl -X PATCH http://localhost:3000/admins/ongs/1/reject \
 
 ### 13. Ver Wishlist de ONG
 ```bash
-curl -X GET http://localhost:3000/wishlist-items/ong/1
+curl -X GET http://localhost:3000/ongs/1/wishlist-items
 ```
 
 ### 14. Adicionar Item à Wishlist (ONG)
 ```bash
-curl -X POST http://localhost:3000/wishlist-items \
+curl -X POST http://localhost:3000/ongs/1/wishlist-items \
   -H "Content-Type: application/json" \
   -b cookies.txt \
   -d '{
     "description": "Notebooks para aula de informática",
     "quantity": 10
   }'
+```
+
+### 15. Avaliar ONG (Doador)
+```bash
+curl -X POST http://localhost:3000/ongs/1/ratings \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{
+    "score": 5,
+    "comment": "Excelente transparência"
+  }'
+```
+
+### 16. Listar Avaliações de ONG
+```bash
+curl -X GET http://localhost:3000/ongs/1/ratings
 ```
 
 ---
@@ -740,6 +762,6 @@ Para dúvidas sobre a API, consulte:
 
 ---
 
-**Última atualização**: 12 de janeiro de 2026  
+**Última atualização**: 14 de janeiro de 2026  
 **Versão da API**: 1.0.0  
 **Status**: Em Produção ✅

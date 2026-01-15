@@ -18,19 +18,26 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'generated/prisma';
 
-@Controller('wishlist-items')
+@Controller('ongs/:ongId/wishlist-items')
 export class WishlistItemController {
   constructor(private readonly service: WhishlistItemService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ong')
-  create(@Body() dto: CreateWhishlistDto, @CurrentUser() user: User) {
+  create(
+    @Param('ongId', ParseIntPipe) ongId: number,
+    @Body() dto: CreateWhishlistDto,
+    @CurrentUser() user: User,
+  ) {
+    if (ongId !== user.id) {
+      throw new ForbiddenException('You can only create items for your own ONG');
+    }
     const { description, quantity } = dto;
     return this.service.create({ ongId: user.id, description, quantity });
   }
 
-  @Get('ong/:ongId')
+  @Get()
   findByOng(@Param('ongId', ParseIntPipe) ongId: number) {
     return this.service.findAllByOng(ongId);
   }

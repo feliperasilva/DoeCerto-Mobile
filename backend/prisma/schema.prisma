@@ -5,15 +5,16 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL") 
 }
 
 model User {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
   email     String   @unique @db.VarChar(255)
-  password  String   @db.VarChar(100)
+  password  String   @db.VarChar(255) // Suporta hashes Argon2/BCrypt
   role      Role
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -24,19 +25,24 @@ model User {
   @@map("users")
 }
 
+enum Role {
+  donor
+  ong
+  admin
+}
+
 model Donor {
   userId    Int        @id @unique 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   cpf       String     @unique @db.VarChar(14)
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
   donations Donation[]
+  ratings   Rating[]
 
   @@map("donors")
-}
-
-enum VerificationStatus {
-  pending
-  verified
-  rejected
 }
 
 model Ong {
@@ -48,27 +54,37 @@ model Ong {
   verifiedById       Int?
   rejectionReason    String?            @db.Text
   
+  // Denormalização para performance de filtros e exibição
+  averageRating      Float?             @default(0.0)
+  numberOfRatings    Int                @default(0)
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
   // Relações
+  profile            OngProfile?
+  ratings            Rating[]
   donations          Donation[]
+  wishlistItems      WishlistItem[]
   verifiedBy         Admin?             @relation("OngVerifications", fields: [verifiedById], references: [userId], onDelete: SetNull)
 
   @@index([verificationStatus])
-  profile    OngProfile?
-  wishlistItems WishlistItem[]
-
   @@map("ongs")
 }
 
 model OngProfile {
   id            Int      @id @default(autoincrement())
   bio           String?  @db.VarChar(500)
-  avatarUrl     String?  @db.VarChar(255) // Caminho da imagem salva
+  avatarUrl     String?  @db.VarChar(255)
   contactNumber String?  @db.VarChar(20)
   websiteUrl    String?  @db.VarChar(255)
   address       String?  @db.VarChar(255)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   ongId         Int      @unique
-  ong    Ong    @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+  ong           Ong      @relation(fields: [ongId], references: [userId], onDelete: Cascade)
 
   @@map("ong_profiles")
 }
@@ -83,23 +99,28 @@ model Admin {
   @@map("admins")
 }
 
-enum Role {
-  donor
-  ong
-  admin
+enum VerificationStatus {
+  pending
+  verified
+  rejected
 }
 
 model Donation {
   id                  Int            @id @default(autoincrement())
   donationType        DonationType
   donationStatus      DonationStatus @default(pending)
-  monetaryAmount      Float?
+  
+  // Decimal para precisão financeira (MySQL Decimal 10,2)
+  monetaryAmount      Decimal?       @db.Decimal(10, 2)
   monetaryCurrency    String?        @db.VarChar(3)
+  
   proofOfPaymentUrl   String?        @db.VarChar(255)
   materialDescription String?        @db.Text
   materialQuantity    Int?
+  
   donorId             Int
   ongId               Int
+  
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   verifiedAt          DateTime?
@@ -124,13 +145,40 @@ enum DonationType {
   material
 }
 
-//Model for WishlistItem
 model WishlistItem {
-  id          Int     @id @default(autoincrement())
-  ongId      Int
-  description String  @db.VarChar(255)
+  id          Int      @id @default(autoincrement())
+  description String   @db.VarChar(255)
   quantity    Int
-  ong        Ong     @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ongId       Int
+  ong         Ong      @relation(fields: [ongId], references: [userId], onDelete: Cascade)
 
   @@map("wishlist_items")
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  score     Int      // Recomendado validar no NestJS (1 a 5)
+  comment   String?  @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ongId     Int
+  donorId   Int
+
+  ong       Ong      @relation(fields: [ongId], references: [userId], onDelete: Cascade)
+  donor     Donor    @relation(fields: [donorId], references: [userId], onDelete: Cascade)
+
+  // Garante que um doador avalie uma ONG apenas uma vez
+  @@unique([ongId, donorId])
+  
+  // Índices para performance de busca e agregação (AVG/COUNT)
+  @@index([ongId])
+  @@index([donorId])
+  
+  @@map("ratings")
 }

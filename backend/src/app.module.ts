@@ -10,6 +10,7 @@ import { AdminsModule } from './admins/admins.module';
 import { DonationsModule } from './donations/donations.module';
 import { WhishlistItemModule } from './whishlist_items/whishlist-item.module';
 import { OngProfilesModule } from './ong-profile/ong-profiles.module';
+import { RatingsModule } from './ratings/ratings.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { OngProfilesModule } from './ong-profile/ong-profiles.module';
     DonationsModule, 
     WhishlistItemModule,
     OngProfilesModule,
+    RatingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

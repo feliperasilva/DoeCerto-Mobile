@@ -30,7 +30,7 @@ import { multerPaymentProofConfig } from 'src/config/multer-payment-proof.config
 import { ImageProcessingService } from 'src/common/services/image-processing.service';
 
 @Controller('donations')
-@UseGuards(JwtAuthGuard, RolesGuard) // Ambos no controller
+@UseGuards(JwtAuthGuard, RolesGuard) // Mantém guard para rotas que exigem autenticação
 export class DonationsController {
   constructor(
     private readonly donationsService: DonationsService,
@@ -73,7 +73,7 @@ export class DonationsController {
 
   // ✅ DOADOR: Visualizar minhas doações enviadas
   @Roles('donor')
-  @Get('sent')
+  @Get('me/sent')
   getSentDonations(
     @CurrentUser() user: User,
     @Query('type') type?: DonationType,
@@ -85,7 +85,7 @@ export class DonationsController {
 
   // ✅ ONG: Visualizar doações recebidas
   @Roles('ong')
-  @Get('received')
+  @Get('me/received')
   async getReceivedDonations(
     @CurrentUser() user: User,
     @Query('type') type?: DonationType,
@@ -96,7 +96,7 @@ export class DonationsController {
   }
 
   // ✅ PÚBLICO: Visualizar doações de um doador (sem role)
-  @Get('donor/:donorId')
+  @Get('/donors/:donorId')
   findByDonor(
     @Param('donorId', ParseIntPipe) donorId: number,
     @Query('type') type?: DonationType,
@@ -109,7 +109,7 @@ export class DonationsController {
   }
 
   // ✅ PÚBLICO: Visualizar doações de uma ONG (sem role)
-  @Get('ong/:ongId')
+  @Get('/ongs/:ongId')
   findByOng(
     @Param('ongId', ParseIntPipe) ongId: number,
     @Query('type') type?: DonationType,
