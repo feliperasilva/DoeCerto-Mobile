@@ -12,8 +12,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { OngProfilesService } from './ong-profiles.service';
 import { CreateOngProfileDto } from './dto/create-profile.dto';
-import { ImageProcessingService } from '../common/services/image-processing.service';
-import { multerAvatarConfig } from '../config/multer-avatar.config';
+import { ImageProcessingService } from '../../common/services/image-processing.service';
+import { multerAvatarConfig } from '../../config/multer-avatar.config';
 
 @Controller('ongs/:ongId/profile')
 export class OngProfilesController {

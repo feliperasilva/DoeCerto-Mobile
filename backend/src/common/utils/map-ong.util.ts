@@ -1,4 +1,4 @@
-import { OngResponseDto } from 'src/ongs/dto/ong-response.dto';
+import { OngResponseDto } from 'src/modules/ongs/dto/ong-response.dto';
 
 export function mapOng(ong: any): OngResponseDto {
   return {

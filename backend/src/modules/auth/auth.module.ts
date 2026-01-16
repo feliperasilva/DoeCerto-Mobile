@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from 'src/users/users.module';
+import { UsersModule } from 'src/modules/users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { DonorsModule } from 'src/donors/donors.module';
-import { OngsModule } from 'src/ongs/ongs.module';
+import { DonorsModule } from 'src/modules/donors/donors.module';
+import { OngsModule } from 'src/modules/ongs/ongs.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({

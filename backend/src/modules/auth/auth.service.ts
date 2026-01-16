@@ -6,13 +6,13 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import type { User } from 'generated/prisma';
-import { UsersService } from 'src/users/users.service';
-import { DonorsService } from 'src/donors/donors.service';
-import { OngsService } from 'src/ongs/ongs.service';
+import { UsersService } from 'src/modules/users/users.service';
+import { DonorsService } from 'src/modules/donors/donors.service';
+import { OngsService } from 'src/modules/ongs/ongs.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDonorDto } from './dto/register-donor.dto';
 import { RegisterOngDto } from './dto/register-ong.dto';
-import type { UserResponseDto } from 'src/users/dto/user-response.dto';
+import type { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
 
 interface AuthResponse {
   accessToken: string;

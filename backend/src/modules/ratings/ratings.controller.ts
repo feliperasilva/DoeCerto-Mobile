@@ -1,10 +1,10 @@
 import { Controller, Post, UseGuards, Body, Get, Param, ParseIntPipe, Query, DefaultValuePipe } from '@nestjs/common';
 import { RatingsService } from './ratings.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
+import { Roles } from 'src/modules/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
 import type { User } from 'generated/prisma';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
 import { RatingDto } from './dto/rating.dto';
 
 @Controller('ongs/:ongId/ratings')
