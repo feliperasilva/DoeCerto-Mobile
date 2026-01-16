@@ -79,6 +79,8 @@ model OngProfile {
   contactNumber String?  @db.VarChar(20)
   websiteUrl    String?  @db.VarChar(255)
   address       String?  @db.VarChar(255)
+  categories    Category[]
+
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -181,4 +183,15 @@ model Rating {
   @@index([donorId])
   
   @@map("ratings")
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  profiles    OngProfile[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
 }
