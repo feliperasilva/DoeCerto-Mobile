@@ -8,7 +8,7 @@ import { OngsModule } from './modules/ongs/ongs.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminsModule } from './modules/admins/admins.module';
 import { DonationsModule } from './modules/donations/donations.module';
-import { WhishlistItemModule } from './modules/whishlist_items/whishlist-item.module';
+import { WhishlistItemModule } from './modules/whishlist-items/whishlist-item.module';
 import { OngProfilesModule } from './modules/ong-profile/ong-profiles.module';
 import { RatingsModule } from './modules/ratings/ratings.module';
 
