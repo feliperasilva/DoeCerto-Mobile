@@ -233,15 +233,6 @@ async function main() {
       categoryIds: [categories[1].id, categories[3].id],
     },
     {
-      ongId: ongs[13].userId,
-      bio: 'Resgatamos, tratamos e encontramos lares para animais abandonados. Todo animal merece amor e cuidado.',
-      contactNumber: '(11) 98013-4567',
-      websiteUrl: 'https://sosanimais.org',
-      address: 'Rua dos Bichos, 777 - Lapa, São Paulo - SP',
-      avatarUrl: '/uploads/profiles/sos-animais.jpg',
-      categoryIds: [categories[6].id, categories[3].id],
-    },
-    {
       ongId: ongs[14].userId,
       bio: 'Proporcionamos alegria, educação e apoio emocional para crianças hospitalizadas e em tratamento de saúde.',
       contactNumber: '(11) 98014-5678',
