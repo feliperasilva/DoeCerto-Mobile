@@ -11,6 +11,8 @@ import { DonationsModule } from './modules/donations/donations.module';
 import { WhishlistItemModule } from './modules/whishlist-items/whishlist-item.module';
 import { OngProfilesModule } from './modules/ong-profile/ong-profiles.module';
 import { RatingsModule } from './modules/ratings/ratings.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { RatingsModule } from './modules/ratings/ratings.module';
     WhishlistItemModule,
     OngProfilesModule,
     RatingsModule,
+    CatalogModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
