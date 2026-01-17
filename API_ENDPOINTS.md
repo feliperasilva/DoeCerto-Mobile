@@ -1,7 +1,7 @@
 # 🔐 DoeCerto API - Documentação Completa de Endpoints
 
-**Versão**: 1.1.0  
-**Data de Atualização**: 16 de janeiro de 2026  
+**Versão**: 1.2.0  
+**Data de Atualização**: 17 de janeiro de 2026  
 **Status**: Em Produção
 
 ---
@@ -338,6 +338,124 @@
 - **Params**: `ongId: number`, `id: number`
 - **Status HTTP**: 200 OK
 - **Validação**: ONG do item deve ser a mesma do path e do usuário logado
+
+---
+
+## 📚 Catálogo de ONGs (`/catalog`)
+
+### GET `/catalog` 🔓
+- **Descrição**: Busca ONGs verificadas organizadas em 4 seções com ranking inteligente
+- **Autorização**: Público
+- **Query Parameters**:
+  - `categoryIds` (opcional): IDs de categorias separados por vírgula (ex: `1,2,3`)
+  - `limit` (opcional, default: 10): Quantidade de resultados por seção
+  - `offset` (opcional, default: 0): Paginação offset-based para "ver mais"
+- **Response**:
+  ```json
+  [
+    {
+      "title": "Melhor Avaliadas",
+      "type": "topRated",
+      "data": [
+        {
+          "id": 16,
+          "userId": 16,
+          "name": "Instituto Viver Bem",
+          "averageRating": 4.5,
+          "numberOfRatings": 10,
+          "createdAt": "2024-12-01T03:43:26.000Z",
+          "matchCount": 2,
+          "user": {
+            "id": 16,
+            "name": "Instituto Viver Bem",
+            "email": "contato@viverbem.org.br"
+          },
+          "categories": [
+            { "id": 1, "name": "Educação" },
+            { "id": 2, "name": "Saúde" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Mais Recentes",
+      "type": "newest",
+      "data": [...]
+    },
+    {
+      "title": "Mais Favoritas",
+      "type": "topFavored",
+      "data": [...]
+    },
+    {
+      "title": "Mais Antigas",
+      "type": "oldest",
+      "data": [...]
+    }
+  ]
+  ```
+- **Seções Retornadas**:
+  - **Melhor Avaliadas** (`topRated`): Ordenadas por `averageRating` descendente
+  - **Mais Recentes** (`newest`): Ordenadas por `createdAt` descendente
+  - **Mais Favoritas** (`topFavored`): Ordenadas por `numberOfRatings` descendente
+  - **Mais Antigas** (`oldest`): Ordenadas por `createdAt` ascendente
+- **Ranking Inteligente**:
+  - Quando `categoryIds` é fornecido, ONGs com mais categorias correspondentes aparecem primeiro
+  - Campo `matchCount` indica quantas categorias da ONG correspondem ao filtro
+  - Dentro do mesmo `matchCount`, aplica-se a ordenação específica da seção
+  - Tie-breaker final: `userId` ascendente para resultados determinísticos
+- **Exemplos de Uso**:
+  - Todas as ONGs: `GET /catalog`
+  - Com filtro: `GET /catalog?categoryIds=1,2,3`
+  - Paginação: `GET /catalog?limit=10&offset=10`
+  - Completo: `GET /catalog?categoryIds=1,2&limit=5&offset=0`
+
+---
+
+## 🏷️ Categorias (`/categories`)
+
+### POST `/categories` 👑
+- **Descrição**: Criar nova categoria
+- **Autorização**: Admin only
+- **Body**: `{ name: string }`
+- **Response**: Categoria criada
+- **Validação**: Nome único (conflict se já existe)
+
+### GET `/categories` 🔓
+- **Descrição**: Listar categorias paginadas
+- **Autorização**: Público
+- **Query**: `skip` (default: 0), `take` (default: 10, max: 100)
+- **Response**:
+  ```json
+  {
+    "data": [
+      { "id": 1, "name": "Educação", "createdAt": "...", "updatedAt": "..." }
+    ],
+    "pagination": {
+      "skip": 0,
+      "take": 10,
+      "total": 12,
+      "pages": 2
+    }
+  }
+  ```
+- **Nota**: Ordenação alfabética por nome
+
+### GET `/categories/:id` 🔓
+- **Descrição**: Buscar categoria específica
+- **Autorização**: Público
+- **Params**: `id: number`
+
+### PATCH `/categories/:id` 👑
+- **Descrição**: Atualizar categoria
+- **Autorização**: Admin only
+- **Params**: `id: number`
+- **Body**: `{ name: string }`
+
+### DELETE `/categories/:id` 👑
+- **Descrição**: Deletar categoria
+- **Autorização**: Admin only
+- **Params**: `id: number`
 
 ---
 
@@ -773,6 +891,6 @@ Para dúvidas sobre a API, consulte:
 
 ---
 
-**Última atualização**: 14 de janeiro de 2026  
-**Versão da API**: 1.0.0  
+**Última atualização**: 17 de janeiro de 2026  
+**Versão da API**: 1.2.0  
 **Status**: Em Produção ✅
