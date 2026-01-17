@@ -8,32 +8,42 @@ import {
   UploadedFile, 
   ParseIntPipe,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { OngProfilesService } from './ong-profiles.service';
-import { CreateOngProfileDto } from './dto/create-profile.dto';
+import { UpdateOngProfileDto } from './dto/update-ong-profile.dto';
 import { ImageProcessingService } from '../../common/services/image-processing.service';
 import { multerAvatarConfig } from '../../config/multer-avatar.config';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { User } from 'generated/prisma';
 
-@Controller('ongs/:ongId/profile')
+@Controller('ongs')
 export class OngProfilesController {
   constructor(
     private readonly ongProfilesService: OngProfilesService,
-    private readonly imageProcessingService: ImageProcessingService, // ✅ Injetar
+    private readonly imageProcessingService: ImageProcessingService, // ✅ Injetado para processamento de imagem
   ) {}
 
-  @Post()
-  @UseInterceptors(FileInterceptor('file', multerAvatarConfig)) // ✅ Usar config centralizada
+  
+  @Post('me/profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ong')
+  @UseInterceptors(FileInterceptor('file', multerAvatarConfig)) // ✅ Configuração centralizada do Multer
   async createOrUpdate(
-    @Param('ongId', ParseIntPipe) ongId: number,
-    @Body() dto: CreateOngProfileDto,
+    @Body() dto: UpdateOngProfileDto,
+    @CurrentUser() user: User,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     let avatarPath: string | undefined;
 
+    // Se um ficheiro for enviado, processamos através do serviço especializado
     if (file) {
       try {
-        // ✅ Processar imagem: corta para 1:1, redimensiona para 512x512 e comprime
+        // ✅ Processar imagem: corta 1:1, redimensiona para 512x512 e comprime via Sharp
         avatarPath = await this.imageProcessingService.processAvatarImage(
           file.path,
           512,
@@ -43,10 +53,14 @@ export class OngProfilesController {
       }
     }
     
-    return this.ongProfilesService.createOrUpdate(ongId, dto, avatarPath);
+    // ✅ Envia para o service o ID da ONG do JWT, o DTO (incluindo categoryIds) e o caminho da imagem
+    return this.ongProfilesService.createOrUpdate(user.id, dto, avatarPath);
   }
 
-  @Get()
+  /**
+   * Procura o perfil detalhado de uma ONG pelo seu ID.
+   */
+  @Get(':ongId/profile')
   async findOne(@Param('ongId', ParseIntPipe) ongId: number) {
     return this.ongProfilesService.findOne(ongId);
   }

@@ -54,17 +54,12 @@ export class DonorsController {
   // Donor can only update their own profile
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('donor')
-  @Patch(':id')
+  @Patch('me')
   update(
-    @Param('id', ParseIntPipe) id: number,
     @Body() updateDonorDto: UpdateDonorDto,
     @CurrentUser() user: User,
   ) {
-    // Verify user is updating their own profile
-    if (user.id !== id) {
-      throw new ForbiddenException('You can only update your own profile');
-    }
-    return this.donorsService.update(id, updateDonorDto);
+    return this.donorsService.update(user.id, updateDonorDto);
   }
 
   // Admin only - Delete donor

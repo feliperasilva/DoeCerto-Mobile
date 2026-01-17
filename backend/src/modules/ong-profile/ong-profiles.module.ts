@@ -11,5 +11,6 @@ import { ImageProcessingService } from '../../common/services/image-processing.s
     OngProfilesService,
     ImageProcessingService, // ✅ Registrar aqui
   ],
+  
 })
 export class OngProfilesModule {}

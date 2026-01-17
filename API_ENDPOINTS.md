@@ -1,7 +1,7 @@
 # 🔐 DoeCerto API - Documentação Completa de Endpoints
 
-**Versão**: 1.0.0  
-**Data de Atualização**: 14 de janeiro de 2026  
+**Versão**: 1.1.0  
+**Data de Atualização**: 16 de janeiro de 2026  
 **Status**: Em Produção
 
 ---
@@ -93,14 +93,25 @@
 - **Descrição**: Listar todos os usuários
 - **Autorização**: Admin only
 
-### GET `/users/:id` 🔑
-- **Descrição**: Visualizar perfil de usuário
-- **Autorização**: Próprio usuário ou admin
+### GET `/users/me` 🔒
+- **Descrição**: Visualizar próprio perfil
+- **Autorização**: Usuário autenticado
+- **Response**: Dados do usuário logado (ID vem do JWT)
+
+### GET `/users/:id` 👑
+- **Descrição**: Visualizar perfil de qualquer usuário
+- **Autorização**: Admin only
 - **Params**: `id: number`
 
-### PATCH `/users/:id` 🔑
-- **Descrição**: Atualizar perfil de usuário
-- **Autorização**: Próprio usuário ou admin
+### PATCH `/users/me` 🔒
+- **Descrição**: Atualizar próprio perfil
+- **Autorização**: Usuário autenticado
+- **Body**: `UpdateUserDto`
+- **Nota**: ID vem do JWT, não da URL
+
+### PATCH `/users/:id` 👑
+- **Descrição**: Atualizar perfil de qualquer usuário
+- **Autorização**: Admin only
 - **Params**: `id: number`
 - **Body**: `UpdateUserDto`
 
@@ -127,12 +138,11 @@
 - **Autorização**: Qualquer usuário autenticado
 - **Params**: `id: number`
 
-### PATCH `/donors/:id` 👤
-- **Descrição**: Atualizar perfil de doador
-- **Autorização**: Apenas o próprio doador
-- **Params**: `id: number`
+### PATCH `/donors/me` 👤
+- **Descrição**: Atualizar próprio perfil de doador
+- **Autorização**: Apenas doadores
 - **Body**: `UpdateDonorDto`
-- **Validação**: Verifica se `user.id === id`
+- **Nota**: ID do doador vem do JWT (user.id), não da URL
 
 ### DELETE `/donors/:id` 👑
 - **Descrição**: Deletar doador
@@ -157,12 +167,11 @@
 - **Público**: Para que doadores vejam detalhes
 - **Params**: `id: number`
 
-### PATCH `/ongs/:id` 🏢
-- **Descrição**: Atualizar perfil da ONG
-- **Autorização**: Apenas a própria ONG
-- **Params**: `id: number`
+### PATCH `/ongs/me` 🏢
+- **Descrição**: Atualizar próprio perfil da ONG
+- **Autorização**: Apenas ONGs
 - **Body**: `UpdateOngDto`
-- **Validação**: Verifica se `user.id === id`
+- **Nota**: ID da ONG vem do JWT (user.id), não da URL
 
 ### DELETE `/ongs/:id` 👑
 - **Descrição**: Deletar ONG
@@ -255,12 +264,11 @@
 
 ---
 
-## 👥 ONG Profiles (`/ongs/:ongId/profile`)
+## 👥 ONG Profiles (`/ongs`)
 
-### POST `/ongs/:ongId/profile` 🏢
-- **Descrição**: Criar ou atualizar perfil de ONG
-- **Autorização**: Apenas a própria ONG
-- **Params**: `ongId: number`
+### POST `/ongs/me/profile` 🏢
+- **Descrição**: Criar ou atualizar próprio perfil de ONG
+- **Autorização**: Apenas ONGs
 - **Content-Type**: `multipart/form-data` (suporta upload de avatar)
 - **Body**:
   ```json
@@ -273,6 +281,7 @@
   }
   ```
 - **Response**: Perfil completo com avatar processado
+- **Nota**: ID da ONG vem do JWT (user.id), não da URL
 - **Processamento de Imagem**:
   - Recorte automático para 1:1
   - Redimensionamento para 512x512px
@@ -291,8 +300,8 @@
 
 ### POST `/ongs/:ongId/wishlist-items` 🏢
 - **Descrição**: Criar item na lista de desejos da ONG
-- **Autorização**: Apenas a própria ONG
-- **Params**: `ongId: number`
+- **Autorização**: Apenas ONGs
+- **Params**: `ongId: number` (usado apenas para rota pública GET)
 - **Body**:
   ```json
   {
@@ -301,7 +310,7 @@
   }
   ```
 - **Response**: Item criado com ID
-- **Validação**: `ongId` do path deve ser o da ONG autenticada
+- **Nota**: Para POST, o ID da ONG vem do JWT (user.id). O `ongId` na URL é ignorado na criação.
 
 ### GET `/ongs/:ongId/wishlist-items` 🔓
 - **Descrição**: Listar todos os itens da wishlist de uma ONG
@@ -458,15 +467,17 @@ Agora ONGs podem receber doações ✅
 
 ### 5️⃣ Fluxo de Perfil e Wishlist da ONG
 ```
-ONG → POST /ongs/:ongId/profile
+ONG (autenticada) → POST /ongs/me/profile
+  → ID da ONG vem do JWT
   → Envia: bio, contactNumber, websiteUrl, address, avatar
   → Avatar processado: 512x512px, JPEG
   → Salvo em /uploads/profiles/
     
-ONG → POST /ongs/:ongId/wishlist-items
+ONG (autenticada) → POST /ongs/:ongId/wishlist-items
+  → ongId na URL é ignorado para POST, usa user.id do JWT
   → Adiciona itens que precisa
     
-Doadores → GET /ongs/:ongId/profile
+Doadores (público) → GET /ongs/:ongId/profile
     → Vê perfil e avatar
     → GET /ongs/:ongId/wishlist-items
     → Vê o que a ONG precisa

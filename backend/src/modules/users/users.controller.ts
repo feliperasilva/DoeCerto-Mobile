@@ -45,27 +45,35 @@ export class UsersController {
     return this.usersService.findAll(skip, take);
   }
 
-  // Users can view their own profile or admin can view any
+  // Users can view their own profile
+  @Get('me')
+  findMe(@CurrentUser() user: User) {
+    return this.usersService.findOne(user.id);
+  }
+
+  // Admin can view any user profile
+  @Roles('admin')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    // Only admin or the user themselves can view
-    if (user.role !== 'admin' && user.id !== id) {
-      throw new ForbiddenException('You can only view your own profile');
-    }
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOne(id);
   }
 
-  // Users can update their own profile or admin can update any
+  // Users can update their own profile
+  @Patch('me')
+  updateMe(
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.usersService.update(user.id, updateUserDto);
+  }
+
+  // Admin can update any user profile
+  @Roles('admin')
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-    @CurrentUser() user: User,
   ) {
-    // Only admin or the user themselves can update
-    if (user.role !== 'admin' && user.id !== id) {
-      throw new ForbiddenException('You can only update your own profile');
-    }
     return this.usersService.update(id, updateUserDto);
   }
 

@@ -51,17 +51,12 @@ export class OngsController {
   // ONG can only update their own profile
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ong')
-  @Patch(':id')
+  @Patch('me')
   update(
-    @Param('id', ParseIntPipe) id: number,
     @Body() updateOngDto: UpdateOngDto,
     @CurrentUser() user: User,
   ) {
-    // Verify ONG is updating their own profile
-    if (user.id !== id) {
-      throw new ForbiddenException('You can only update your own profile');
-    }
-    return this.ongsService.update(id, updateOngDto);
+    return this.ongsService.update(user.id, updateOngDto);
   }
 
   // Admin only - Delete ONG

@@ -26,13 +26,9 @@ export class WishlistItemController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ong')
   create(
-    @Param('ongId', ParseIntPipe) ongId: number,
     @Body() dto: CreateWhishlistDto,
     @CurrentUser() user: User,
   ) {
-    if (ongId !== user.id) {
-      throw new ForbiddenException('You can only create items for your own ONG');
-    }
     const { description, quantity } = dto;
     return this.service.create({ ongId: user.id, description, quantity });
   }
