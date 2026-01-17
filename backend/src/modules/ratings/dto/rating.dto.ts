@@ -3,12 +3,6 @@ import { Type } from "class-transformer";
 
 export class RatingDto {
 
-    @IsNotEmpty({ message: 'ONG ID is required' })
-    @IsNumber({}, { message: 'ONG ID must be a valid number' })
-    @IsPositive({ message: 'ONG ID must be a positive number' })
-    @Type(() => Number)
-    ongId: number;
-
     @IsNotEmpty({ message: 'Score is required' })
     @IsNumber({}, { message: 'Score must be a valid number' })
     @IsPositive({ message: 'Score must be a positive number' })

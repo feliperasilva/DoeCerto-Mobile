@@ -11,7 +11,7 @@ import { RatingDto } from './dto/rating.dto';
 export class RatingsController {
   constructor(private readonly ratingsService: RatingsService) {}
 
-  // POST /ratings/5 -> Cria ou atualiza a nota da ONG 5
+  // POST /ongs/:ongId/ratings -> Cria ou atualiza a nota da ONG
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('donor')
@@ -20,8 +20,7 @@ export class RatingsController {
     @Body() ratingDto: RatingDto, 
     @CurrentUser() user: User
   ) {
-    // Garantimos que o ongId da URL seja o usado, ignorando o que vier no body se necessário
-    return this.ratingsService.rateOng({ ...ratingDto, ongId }, user.id);
+    return this.ratingsService.rateOng(ratingDto, ongId, user.id);
   } 
 
   // GET /ratings/5 -> Lista todas as notas da ONG 5

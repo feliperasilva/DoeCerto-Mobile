@@ -30,7 +30,7 @@ export class WishlistItemController {
     @CurrentUser() user: User,
   ) {
     const { description, quantity } = dto;
-    return this.service.create({ ongId: user.id, description, quantity });
+    return this.service.create(user.id, { description, quantity });
   }
 
   @Get()

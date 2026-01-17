@@ -6,8 +6,8 @@ import { CreateWhishlistDto } from './dto/create-whishlist.dto';
 export class WhishlistItemService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateWhishlistDto) {
-    return this.prisma.wishlistItem.create({ data: { ...dto } });
+  async create(ongId: number, dto: CreateWhishlistDto) {
+    return this.prisma.wishlistItem.create({ data: { ongId, ...dto } });
   }
 
   async findAllByOng(ongId: number) {

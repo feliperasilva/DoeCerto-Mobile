@@ -8,8 +8,8 @@ export class RatingsService {
 
     constructor(private readonly prisma: PrismaService) {}
 
-    async rateOng(ratingDto: RatingDto, donorId: number) {
-        const { ongId, score, comment } = ratingDto;
+    async rateOng(ratingDto: RatingDto, ongId: number, donorId: number) {
+        const { score, comment } = ratingDto;
 
         // 1. Validações fundamentais
         await this.verifyOngExists(ongId);
