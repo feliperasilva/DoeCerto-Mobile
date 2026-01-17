@@ -19,6 +19,7 @@ async function main() {
   await prisma.wishlistItem.deleteMany();
   await prisma.donation.deleteMany();
   await prisma.ongProfile.deleteMany();
+  await prisma.category.deleteMany();
   await prisma.donor.deleteMany();
   await prisma.ong.deleteMany();
   await prisma.admin.deleteMany();
@@ -149,19 +150,120 @@ async function main() {
   }
   console.log('');
 
+  // ==================== CATEGORIAS ====================
+  console.log('🏷️  Creating categories...');
+  const categoryNames = [
+    'Educação',
+    'Saúde',
+    'Meio Ambiente',
+    'Assistência Social',
+    'Cultura e Arte',
+    'Direitos Humanos',
+    'Proteção Animal',
+    'Desenvolvimento Comunitário',
+    'Alimentação',
+    'Moradia',
+    'Esporte e Lazer',
+    'Tecnologia e Inovação',
+  ];
+
+  const categories: { id: number; name: string }[] = [];
+  for (const name of categoryNames) {
+    const category = await prisma.category.create({ data: { name } });
+    categories.push(category);
+    console.log(`✅ Category: ${name}`);
+  }
+  console.log('');
+
   // ==================== PERFIS DE ONG ====================
   console.log('📝 Creating ONG profiles...');
-  const profileSeeds = ongs.slice(0, 8).map((ong, idx) => ({
-    ongId: ong.userId,
-    bio: `Perfil oficial da ${ong.name}.`,
-    contactNumber: `(11) 9${8000 + idx}0-1234`,
-    websiteUrl: `https://${ong.name.toLowerCase().replace(/\s+/g, '')}.org`,
-    address: `Rua Solidária, ${100 + idx}, São Paulo - SP`,
-    avatarUrl: `/uploads/profiles/${ong.name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
-  }));
+  const profileSeeds = [
+    {
+      ongId: ongs[1].userId,
+      bio: 'Promovemos saúde e bem-estar para comunidades carentes através de atendimento médico gratuito e programas de prevenção.',
+      contactNumber: '(11) 98001-2345',
+      websiteUrl: 'https://viverbem.org.br',
+      address: 'Av. Paulista, 1500 - Bela Vista, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/instituto-viver-bem.jpg',
+      categoryIds: [categories[1].id, categories[3].id],
+    },
+    {
+      ongId: ongs[2].userId,
+      bio: 'Dedicados à educação de qualidade para crianças e jovens em situação de vulnerabilidade social, construindo um futuro melhor.',
+      contactNumber: '(11) 98002-3456',
+      websiteUrl: 'https://amigosdofuturo.org',
+      address: 'Rua da Educação, 250 - Centro, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/amigos-do-futuro.jpg',
+      categoryIds: [categories[0].id, categories[7].id],
+    },
+    {
+      ongId: ongs[5].userId,
+      bio: 'Oferecemos capacitação profissional e desenvolvimento pessoal para adolescentes e adultos em busca de oportunidades.',
+      contactNumber: '(11) 98005-6789',
+      websiteUrl: 'https://institutocrescer.org',
+      address: 'Rua do Progresso, 450 - Vila Mariana, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/instituto-crescer.jpg',
+      categoryIds: [categories[0].id, categories[11].id],
+    },
+    {
+      ongId: ongs[7].userId,
+      bio: 'Trabalhamos pela preservação ambiental e educação ecológica, semeando consciência para um planeta sustentável.',
+      contactNumber: '(11) 98007-8901',
+      websiteUrl: 'https://fundacaosemear.org.br',
+      address: 'Av. Verde, 1800 - Jardim Botânico, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/fundacao-semear.jpg',
+      categoryIds: [categories[2].id, categories[0].id],
+    },
+    {
+      ongId: ongs[10].userId,
+      bio: 'Conectamos doadores e voluntários a famílias necessitadas, promovendo solidariedade e transformação social.',
+      contactNumber: '(11) 98010-1234',
+      websiteUrl: 'https://redesolidaria.org',
+      address: 'Rua da Solidariedade, 100 - Ipiranga, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/rede-solidaria.jpg',
+      categoryIds: [categories[3].id, categories[8].id],
+    },
+    {
+      ongId: ongs[12].userId,
+      bio: 'Cuidamos de idosos em situação de abandono, oferecendo acolhimento, saúde e dignidade na terceira idade.',
+      contactNumber: '(11) 98012-3456',
+      websiteUrl: 'https://vidaplena.org',
+      address: 'Rua da Esperança, 320 - Mooca, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/vida-plena.jpg',
+      categoryIds: [categories[1].id, categories[3].id],
+    },
+    {
+      ongId: ongs[13].userId,
+      bio: 'Resgatamos, tratamos e encontramos lares para animais abandonados. Todo animal merece amor e cuidado.',
+      contactNumber: '(11) 98013-4567',
+      websiteUrl: 'https://sosanimais.org',
+      address: 'Rua dos Bichos, 777 - Lapa, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/sos-animais.jpg',
+      categoryIds: [categories[6].id, categories[3].id],
+    },
+    {
+      ongId: ongs[14].userId,
+      bio: 'Proporcionamos alegria, educação e apoio emocional para crianças hospitalizadas e em tratamento de saúde.',
+      contactNumber: '(11) 98014-5678',
+      websiteUrl: 'https://criancafeliz.org',
+      address: 'Av. da Criança, 999 - Santana, São Paulo - SP',
+      avatarUrl: '/uploads/profiles/crianca-feliz.jpg',
+      categoryIds: [categories[1].id, categories[0].id, categories[4].id],
+    },
+  ];
 
-  await prisma.ongProfile.createMany({ data: profileSeeds });
-  console.log(`✅ ${profileSeeds.length} profiles created`);
+  for (const profile of profileSeeds) {
+    const { categoryIds, ...profileData } = profile;
+    await prisma.ongProfile.create({
+      data: {
+        ...profileData,
+        categories: {
+          connect: categoryIds.map(id => ({ id })),
+        },
+      },
+    });
+    console.log(`✅ Profile created: ${ongs.find(o => o.userId === profile.ongId)?.name}`);
+  }
   console.log('');
 
   // ==================== WISHLIST ITEMS ====================
@@ -274,6 +376,7 @@ async function main() {
   console.log(`✅ ${admins.length} Admins created`);
   console.log(`✅ ${donors.length} Donors created`);
   console.log(`✅ ${ongs.length} ONGs created (Verified: ${ongs.filter(o => o.status === VerificationStatus.verified).length}, Pending: ${ongs.filter(o => o.status === VerificationStatus.pending).length}, Rejected: ${ongs.filter(o => o.status === VerificationStatus.rejected).length})`);
+  console.log(`✅ ${categories.length} Categories created`);
   console.log(`✅ ${profileSeeds.length} ONG profiles created`);
   console.log(`✅ ${wishlistSeeds.length} Wishlist items created`);
   console.log(`✅ ${donationRecords.length} Donations created`);
