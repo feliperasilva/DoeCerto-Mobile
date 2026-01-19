@@ -39,10 +39,27 @@ model Donor {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
+  profile   DonorProfile?
   donations Donation[]
   ratings   Rating[]
 
   @@map("donors")
+}
+
+model DonorProfile {
+  id            Int      @id @default(autoincrement())
+  bio           String?  @db.VarChar(500)
+  avatarUrl     String?  @db.VarChar(255)
+  contactNumber String?  @db.VarChar(20)
+  address       String?  @db.VarChar(255)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  donorId       Int      @unique
+  donor         Donor    @relation(fields: [donorId], references: [userId], onDelete: Cascade)
+
+  @@map("donor_profiles")
 }
 
 model Ong {
