@@ -212,3 +212,18 @@ model Category {
 
   @@map("categories")
 }
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String   @db.VarChar(255)
+  tokenHash String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
