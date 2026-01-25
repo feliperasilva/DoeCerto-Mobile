@@ -7,6 +7,8 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { DonorsModule } from 'src/modules/donors/donors.module';
 import { OngsModule } from 'src/modules/ongs/ongs.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { MailerService } from 'src/common/services/mailer.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -15,6 +17,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ConfigModule,
     DonorsModule,
     OngsModule,
+    PrismaModule,
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
@@ -33,7 +36,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, MailerService],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}
