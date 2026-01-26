@@ -1,5 +1,5 @@
 // src/catalog/dto/get-catalog.dto.ts
-import { IsOptional, IsArray, IsInt } from 'class-validator';
+import { IsOptional, IsArray, IsInt, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class GetCatalogDto {
@@ -16,6 +16,10 @@ export class GetCatalogDto {
   @IsArray()
   @IsInt({ each: true })
   categoryIds?: number[];
+
+  @IsOptional()
+  @IsString()
+  searchTerm?: string;
 
   @IsOptional()
   @IsInt()
