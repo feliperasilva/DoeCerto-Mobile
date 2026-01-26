@@ -10,9 +10,21 @@ export class CatalogService {
 
   /**
    * Método principal que orquestra as diferentes seções do catálogo
+   * Se houver searchTerm, retorna uma única lista filtrada
+   * Caso contrário, retorna 4 listas com ordenações diferentes
    */
-  async getCatalog(filters: GetCatalogDto): Promise<CatalogSectionDto[]> {
-    // Executa todas as queries em paralelo para não bloquear o event loop
+  async getCatalog(filters: GetCatalogDto): Promise<CatalogSectionDto[] | CatalogSectionDto> {
+    // Se houver termo de pesquisa, retorna uma única lista filtrada
+    if (filters.searchTerm && filters.searchTerm.trim()) {
+      const searchResults = await this.searchCatalog(filters);
+      return {
+        title: `Resultados para "${filters.searchTerm}"`,
+        type: 'search',
+        data: searchResults,
+      };
+    }
+
+    // Caso contrário, executa todas as queries em paralelo para não bloquear o event loop
     const [topRated, newest, topFavored, oldest] = await Promise.all([
       this.getTopRated(filters),
       this.getNewest(filters),
@@ -29,6 +41,61 @@ export class CatalogService {
   }
 
   // --- MÉTODOS DE ACESSO PÚBLICO PARA SEÇÕES ESPECÍFICAS ---
+
+  /**
+   * Busca no catálogo por termo (nome de ONG ou categoria)
+   */
+  private async searchCatalog(filters: GetCatalogDto): Promise<NgoItemDto[]> {
+    const { searchTerm, categoryIds } = filters;
+    const take = filters.limit || 20;
+    const skip = filters.offset || 0;
+
+    const whereClause: any = {
+      verificationStatus: 'verified',
+      OR: [
+        {
+          user: {
+            name: { search: searchTerm },
+          },
+        },
+        {
+          profile: {
+            categories: {
+              some: {
+                name: { contains: searchTerm },
+              },
+            },
+          },
+        },
+      ],
+    };
+
+    // Se houver filtro de categorias, adiciona AND com as categorias
+    if (categoryIds && categoryIds.length > 0) {
+      whereClause.profile = {
+        categories: {
+          some: { id: { in: categoryIds } },
+        },
+      };
+    }
+
+    const ongs = await this.prisma.ong.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+        profile: {
+          include: { categories: true },
+        },
+      },
+      orderBy: [{ averageRating: 'desc' }, { userId: 'asc' }],
+      skip,
+      take,
+    });
+
+    return ongs.map((ong) => this.mapToDto(ong, categoryIds));
+  }
 
   private async getTopRated(filters: GetCatalogDto) {
     return this.findWithPriority(filters, 'averageRating', 'desc');

@@ -22,6 +22,7 @@ model User {
   ong       Ong?
   admin     Admin?
 
+  @@fulltext([name])
   @@map("users")
 }
 
@@ -84,7 +85,7 @@ model Ong {
   donations          Donation[]
   wishlistItems      WishlistItem[]
   verifiedBy         Admin?             @relation("OngVerifications", fields: [verifiedById], references: [userId], onDelete: SetNull)
-
+  
   @@index([verificationStatus])
   @@map("ongs")
 }
@@ -210,6 +211,7 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@fulltext([name])
   @@map("categories")
 }
 

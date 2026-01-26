@@ -120,4 +120,22 @@ export class OngsService {
 
     return this.prisma.ong.delete({ where: { userId: id } });
   }
+
+  async buscarOngsPorNomeOuCnpj(termo: string) {
+    const ongs = await this.prisma.ong.findMany({
+      where: {
+        OR: [
+          { cnpj: { contains: termo } },
+          {
+            user: {
+              name: { search: termo },
+            },
+          },
+        ],
+      },
+      select: this.ongSelect,
+    });
+
+    return ongs;
+  }
 }
