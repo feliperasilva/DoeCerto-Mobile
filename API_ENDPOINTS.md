@@ -40,6 +40,21 @@
 - **Descrição**: Logout do usuário
 - **Response**: Limpa cookie e retorna mensagem
 
+### POST `/auth/forgot-password` 🔓
+- **Descrição**: Solicita envio de link de recuperação de senha
+- **Body**: `{ email: string }`
+- **Response**: Mensagem genérica de envio (não revela existência do email)
+
+### POST `/auth/validate-reset-token` 🔓
+- **Descrição**: Valida token de reset recebido por email
+- **Body**: `{ token: string }`
+- **Response**: `{ valid: boolean }`
+
+### POST `/auth/reset-password` 🔓
+- **Descrição**: Redefine senha usando token válido
+- **Body**: `{ token: string, newPassword: string }`
+- **Response**: Mensagem de sucesso
+
 ---
 
 ## 👑 Admins (`/admins`)
@@ -132,6 +147,7 @@
 ### GET `/donors` 👑
 - **Descrição**: Listar todos os doadores
 - **Autorização**: Admin only
+- **Query**: `skip` (default 0), `take` (default 20)
 
 ### GET `/donors/:id` 🔒
 - **Descrição**: Visualizar perfil de doador
@@ -160,6 +176,7 @@
 
 ### GET `/ongs` 🔓
 - **Descrição**: Listar todas as ONGs
+- **Query**: `skip` (default 0), `take` (default 20)
 - **Público**: Para que doadores possam navegar
 
 ### GET `/ongs/:id` 🔓
@@ -182,10 +199,11 @@
 
 ## 🎁 Donations (`/donations`)
 
+> Todas as rotas estão protegidas por `JwtAuthGuard`; os ícones indicam requisitos adicionais de role.
+
 ### POST `/donations` 👤
 - **Descrição**: Criar nova doação
-- **Autorização**: Apenas doadores
-- **Body**: `CreateDonationDto { ongId, donationType, monetaryAmount?, materialDescription?, ... }`
+- **Upload opcional**: `proofFile` (comprovante de pagamento) em `multipart/form-data`
 - **Validação**: 
   - `donorId` é automaticamente o ID do usuário logado
   - ⚠️ **A ONG deve estar verificada** (`isVerified: true`)
@@ -194,15 +212,18 @@
 ### GET `/donations` 🔒
 - **Descrição**: Listar todas as doações
 - **Autorização**: Qualquer usuário autenticado
+- **Query**: `skip` (default 0), `take` (default 20)
+- **Descrição**: Listar todas as doações
+- **Autorização**: Qualquer usuário autenticado
 
 ### GET `/donations/me/sent` 👤
-- **Descrição**: Listar doações enviadas pelo doador logado
-- **Autorização**: Apenas doadores
-- **Query**: `?type=monetary|material` (opcional)
+- **Descrição**: Listar doações enviadas pelo doa, `skip` (default 0), `take` (default 20)
 - **Lógica**: Retorna doações onde `donorId` = ID do usuário logado
 
 ### GET `/donations/me/received` 🏢
 - **Descrição**: Listar doações recebidas pela ONG logada
+- **Autorização**: Apenas ONGs
+- **Query**: `?type=monetary|material` (opcional), `skip` (default 0), `take` (default 20NG logada
 - **Autorização**: Apenas ONGs
 - **Query**: `?type=monetary|material` (opcional)
 - **Lógica**: Retorna doações onde `ongId` = ID do usuário logado
@@ -293,6 +314,26 @@
 - **Autorização**: Público (qualquer pessoa pode ver)
 - **Params**: `ongId: number`
 - **Response**: Perfil da ONG com avatar e dados públicos
+
+---
+
+## 👤 Donor Profiles (`/donors`)
+
+### POST `/donors/me/profile` 👤
+- **Descrição**: Criar ou atualizar perfil do doador autenticado
+- **Autorização**: Apenas doadores
+- **Content-Type**: `multipart/form-data` (suporta upload de avatar em `file`)
+- **Body**: `UpdateDonorProfileDto` (bio/opcionais) + `file` (imagem opcional)
+- **Processamento de Imagem**: Corta 1:1, 512x512px, JPEG, salvo em `/uploads/profiles/`
+
+### GET `/donors/me/profile` 👤
+- **Descrição**: Buscar perfil do doador autenticado
+- **Autorização**: Apenas doadores
+
+### GET `/donors/:donorId/profile` 🔓
+- **Descrição**: Visualizar perfil público de um doador
+- **Autorização**: Público
+- **Params**: `donorId: number`
 
 ---
 
